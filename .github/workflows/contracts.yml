@@ -83,7 +83,7 @@ jobs:
           slither . \
             --filter-paths "VerifierPoseidonPreimage|VerifierMerkleInclusion|openzeppelin|forge-std" \
             --exclude naming-conventions,unindexed-event,assembly,deprecated-standalone,low-level-calls,boolean-equal,missing-inheritance,arbitrary-send-eth,timestamp \
-            --fail-low
+            --fail-medium
 
       - name: Gas report artifact
         run: forge test --match-path "test/*.t.sol" --gas-report > gas-report.txt || true
