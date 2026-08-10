@@ -71,13 +71,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install slither
-        run: pip install --quiet slither-analyzer crytic-compile==0.8.*
+      - name: Install slither & solc-select
+        run: |
+          pip install --quiet slither-analyzer crytic-compile==0.8.* solc-select
+          solc-select install 0.8.27
+          solc-select use 0.8.27
 
       - name: Slither (scoped to our contracts, triaged exclusions)
         run: |
           slither src/ \
-            --solc-solcs-select solc-0.8.27 \
+            --solc-remaps "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/ @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/" \
             --filter-paths "VerifierPoseidonPreimage|VerifierMerkleInclusion|openzeppelin|forge-std" \
             --exclude naming-conventions,unindexed-event,assembly,deprecated-standalone,low-level-calls,boolean-equal,missing-inheritance,arbitrary-send-eth,timestamp \
             --fail-low
