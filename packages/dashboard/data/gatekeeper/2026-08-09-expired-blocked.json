@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "circuitId": "poseidon-preimage@1",
+  "vkHash": "0x2daa077c6c6a30539d9fdfe93f11607bfac13994f8f5a4caab0d4c5ab3dc3ac1",
+  "artifactHash": "0x9018f1a520df69803a4a8c2c8049bdd08077b262d38c8be6fa09fa9f32ab850a",
+  "publicInputHash": "0x3f60c9b4d508e2f7aac10cd861cd1ca259e0957cdd0be1e8bdf1c267d911a2c4",
+  "keyId": "key-2",
+  "onChain": {
+    "circuit": "registered+active",
+    "vkMatch": true,
+    "status": "proved",
+    "expiry": "expired"
+  },
+  "checks": [
+    { "name": "envelope-shape", "ok": true, "detail": "valid" },
+    { "name": "circuit-match", "ok": true, "detail": "" },
+    { "name": "vk-certified", "ok": true, "detail": "matches certified vkHash" },
+    { "name": "artifact-bound", "ok": true, "detail": "matches certified bundle" },
+    { "name": "artifact-disk", "ok": true, "detail": "on-disk artifacts match manifest" },
+    { "name": "proof-valid", "ok": true, "detail": "" },
+    { "name": "signature", "ok": true, "detail": "valid" },
+    { "name": "on-chain-circuit", "ok": true, "detail": "circuit registered + active" },
+    { "name": "on-chain-vk", "ok": true, "detail": "matches" },
+    { "name": "on-chain-status", "ok": true, "detail": "proved" },
+    { "name": "on-chain-requireProved", "ok": false, "detail": "revert: ProofExpired(0x3f60c9b4..., provedAt 1786256227, maxAge 3600)" }
+  ],
+  "verified": false,
+  "reasons": [
+    "on-chain-requireProved: revert: expired (maxAge 3600)"
+  ]
+}
