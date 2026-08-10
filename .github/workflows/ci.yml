@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Wait (don't cancel): cancelling an in-flight run discards its
+  # actions/cache post-step save, forcing all legs to regenerate the 72MB
+  # dev PTau from scratch on every push. With cancel-in-progress: false the
+  # in-flight run completes and seeds the cache; the queued run restores it.
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    name: Lint, Typecheck, Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build (workspace deps, topological)
+        run: npm run build
+      - name: Restore dev PTau from cache
+        id: ptau-cache
+        uses: actions/cache@v4
+        with:
+          path: packages/circuit-lib/build/ptau16_dev.ptau
+          key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
+          save-always: true
+      - name: Generate dev PTau (deterministic, skip-if-fresh)
+        run: npm run build:ptau -w @zkpe/circuit-lib
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+
+  platforms:
+    name: Build + Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Restore dev PTau from cache
+        id: ptau-cache
+        uses: actions/cache@v4
+        with:
+          path: packages/circuit-lib/build/ptau16_dev.ptau
+          key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
+          save-always: true
+      - name: Generate dev PTau (deterministic, skip-if-fresh)
+        run: npm run build:ptau -w @zkpe/circuit-lib
+      - name: CLI smoke (fresh install)
+        shell: bash
+        run: npm run fresh-install --workspace @zkpe/cli
+      - name: Test
+        run: npm test

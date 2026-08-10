@@ -1,0 +1,16 @@
+{
+  "file": "2026-08-09-registered-pass.json",
+  "verified": true,
+  "circuitId": "poseidon-preimage@1",
+  "vkHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+  "artifactHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+  "publicInputHash": "0x3333333333333333333333333333333333333333333333333333333333333333",
+  "keyId": "key-1",
+  "reasons": [],
+  "checks": [
+    { "name": "metadata.author", "ok": true, "detail": "author allowlisted" },
+    { "name": "artifact.hash", "ok": true, "detail": "matches manifest" },
+    { "name": "registry", "ok": true, "detail": "registered" }
+  ],
+  "onChain": { "address": "0xdeadbeef", "status": "confirmed" }
+}

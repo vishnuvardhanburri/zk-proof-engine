@@ -1,0 +1,34 @@
+{
+  "file": "2026-08-08-registered-blocked.json",
+  "verified": false,
+  "circuitId": "poseidon-preimage@1",
+  "vkHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+  "artifactHash": null,
+  "publicInputHash": null,
+  "keyId": "key-1",
+  "reasons": [
+    "metadata.author not in allowlist",
+    "artifact hash missing"
+  ],
+  "checks": [
+    {
+      "name": "metadata.author",
+      "ok": false,
+      "detail": "nope"
+    },
+    {
+      "name": "artifact.hash",
+      "ok": false,
+      "detail": "nope"
+    },
+    {
+      "name": "registry",
+      "ok": false,
+      "detail": "nope"
+    }
+  ],
+  "onChain": {
+    "address": "0xdeadbeef",
+    "status": "confirmed"
+  }
+}

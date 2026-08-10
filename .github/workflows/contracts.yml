@@ -1,0 +1,89 @@
+name: Smart Contracts CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['contracts/**', '.github/workflows/contracts.yml']
+  pull_request:
+    paths: ['contracts/**', '.github/workflows/contracts.yml']
+
+concurrency:
+  group: contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build, Test, Fuzz, Invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Build
+        run: forge build --sizes
+
+      - name: Unit + integration tests
+        run: forge test --match-path "test/*.t.sol"
+
+      - name: Property fuzz tests
+        run: forge test --match-path "test/fuzz/*.t.sol" -vv
+
+      - name: Invariant tests
+        run: forge test --match-path "test/invariants/*.t.sol" -vv
+
+      - name: Gas snapshot gate
+        run: forge snapshot --check
+
+      - name: Forge fmt check
+        run: forge fmt --check
+
+  static-analysis:
+    name: Slither + Gas report
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodule: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Build
+        run: forge build
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install slither
+        run: pip install --quiet slither-analyzer crytic-compile==0.8.*
+
+      - name: Slither (scoped to our contracts, triaged exclusions)
+        run: |
+          slither src/ \
+            --solc-solcs-select solc-0.8.27 \
+            --filter-paths "VerifierPoseidonPreimage|VerifierMerkleInclusion|openzeppelin|forge-std" \
+            --exclude naming-conventions,unindexed-event,assembly,deprecated-standalone,low-level-calls,boolean-equal,missing-inheritance,arbitrary-send-eth,timestamp \
+            --fail-low
+
+      - name: Gas report artifact
+        run: forge test --match-path "test/*.t.sol" --gas-report > gas-report.txt || true
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gas-report
+          path: contracts/gas-report.txt
