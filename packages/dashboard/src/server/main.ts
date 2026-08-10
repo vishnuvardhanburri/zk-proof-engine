@@ -32,7 +32,7 @@ async function main(): Promise<void> {
     throw err;
   }
   const webDir = findWebDir(import.meta.dirname);
-  const app = await buildDashboardServer({
+  const app = buildDashboardServer({
     config,
     api: config.apiUrl && config.apiKey && config.apiSecret
       ? new ApiClientDashboardPort({ baseUrl: config.apiUrl, clientId: config.apiKey, secret: config.apiSecret })

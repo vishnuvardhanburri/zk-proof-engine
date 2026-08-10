@@ -46,22 +46,29 @@ export function normalizeSubmission(submission: unknown): unknown {
   if (typeof submission !== 'object' || !submission) return {};
   const s = submission as Record<string, unknown>;
   
+  const safeStr = (v: unknown) => {
+    const str = String(v);
+    if (!/^[a-zA-Z0-9_\-\.]+$/.test(str)) return '';
+    return str;
+  };
+  const safeArr = (arr: unknown) => Array.isArray(arr) ? Array.from(arr).map(safeStr) : [];
+
   let proof: unknown = s.proof;
   if (s.proof && typeof s.proof === 'object') {
     const p = s.proof as Record<string, unknown>;
     if (Array.isArray(p.pi_a) && Array.isArray(p.pi_b) && Array.isArray(p.pi_c)) {
       proof = {
-        pi_a: Array.from(p.pi_a).map(String),
-        pi_b: Array.from(p.pi_b).map(val => Array.isArray(val) ? Array.from(val).map(String) : String(val)),
-        pi_c: Array.from(p.pi_c).map(String),
+        pi_a: safeArr(p.pi_a),
+        pi_b: Array.from(p.pi_b).map(val => Array.isArray(val) ? safeArr(val) : safeStr(val)),
+        pi_c: safeArr(p.pi_c),
       };
     }
   }
 
   return { 
-    circuitId: s.circuitId ? String(s.circuitId) : undefined, 
+    circuitId: s.circuitId ? safeStr(s.circuitId) : undefined, 
     proof, 
-    publicInputs: Array.isArray(s.publicInputs) ? Array.from(s.publicInputs).map(String) : undefined 
+    publicInputs: Array.isArray(s.publicInputs) ? safeArr(s.publicInputs) : undefined 
   };
 }
 
