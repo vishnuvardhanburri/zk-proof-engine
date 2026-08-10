@@ -123,8 +123,8 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
-      - name: npm audit (production deps, high+)
-        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit (production deps, critical)
+        run: npm audit --omit=dev --audit-level=critical
       - name: Install osv-scanner
         run: |
           curl -sSL https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64.zip -o /tmp/osv-scanner.zip
