@@ -5,7 +5,7 @@
  */
 
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import type { GateReportDetail, GateReportSummary, GateOverview } from '../shared/types.js';
 
 export interface GateReportStore {
@@ -32,7 +32,9 @@ export class FsGateReportStore implements GateReportStore {
   async readDetail(file: string): Promise<GateReportDetail | null> {
     if (!REPORT_NAME.test(file)) return null;
     try {
-      const raw = JSON.parse(await readFile(join(this.dir, file), 'utf8'));
+      const target = resolve(this.dir, file);
+      if (!target.startsWith(resolve(this.dir))) return null;
+      const raw = JSON.parse(await readFile(target, 'utf8'));
       return this.toDetail(file, raw);
     } catch {
       return null;
@@ -42,7 +44,9 @@ export class FsGateReportStore implements GateReportStore {
   async readSummary(file: string): Promise<GateReportSummary | null> {
     if (!REPORT_NAME.test(file)) return null;
     try {
-      const raw = JSON.parse(await readFile(join(this.dir, file), 'utf8'));
+      const target = resolve(this.dir, file);
+      if (!target.startsWith(resolve(this.dir))) return null;
+      const raw = JSON.parse(await readFile(target, 'utf8'));
       return this.toSummary(file, raw);
     } catch {
       return null;

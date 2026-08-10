@@ -24,7 +24,8 @@ export class AuditLog implements AuditSinkPort {
     if (this.ring.length > this.cap) this.ring.shift();
     if (this.filePath) {
       try {
-        appendFileSync(this.filePath, JSON.stringify(event) + '\n', 'utf8');
+        const line = JSON.stringify(event).replace(/[\r\n]/g, '');
+        appendFileSync(this.filePath, line + '\n', 'utf8');
       } catch (err) {
         throw new Error(`audit file write failed: ${(err as Error).message}`);
       }

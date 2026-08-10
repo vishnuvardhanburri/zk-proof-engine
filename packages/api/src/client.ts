@@ -88,7 +88,14 @@ export async function signedFetch(
     'x-zk-signature': hmacSha256Hex(cfg.secret, canonical),
   };
 
-  const url = `${cfg.baseUrl.replace(/\/+$/, '')}${path}${opts.query ? `?${opts.query}` : ''}`;
+  let base = cfg.baseUrl;
+  while (base.endsWith('/')) {
+    base = base.slice(0, -1);
+  }
+  const url = `${base}${path}${opts.query ? `?${opts.query}` : ''}`;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    throw new Error('API Client: base URL must use http or https');
+  }
   const fetchImpl = cfg.fetchImpl ?? fetch;
   const res = await fetchImpl(url, {
     method,

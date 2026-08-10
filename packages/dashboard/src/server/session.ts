@@ -4,7 +4,7 @@
  * the server minted it; expiry is enforced server-side, not by the browser.
  */
 
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual, scryptSync } from 'node:crypto';
 
 export interface SessionPayload {
   expiresMs: number;
@@ -36,16 +36,20 @@ export function verifySession(secret: string, token: string | undefined, nowMs =
 
 /** Plain-text password -> constant-time digest comparison via HMAC. */
 export function passwordMatches(expected: string, given: string): boolean {
-  const a = createHmac('sha256', 'zk-dashboard-pw').update(expected).digest();
-  const b = createHmac('sha256', 'zk-dashboard-pw').update(given).digest();
+  const a = scryptSync(expected, 'zk-dashboard-salt', 64);
+  const b = scryptSync(given, 'zk-dashboard-salt', 64);
   return timingSafeEqual(a, b);
 }
 
 export function parseCookies(header: string | undefined): Record<string, string> {
-  const out: Record<string, string> = {};
+  const out: Record<string, string> = Object.create(null);
   for (const part of (header ?? '').split(';')) {
     const idx = part.indexOf('=');
-    if (idx > 0) out[part.slice(0, idx).trim()] = decodeURIComponent(part.slice(idx + 1).trim());
+    if (idx > 0) {
+      const key = part.slice(0, idx).trim();
+      if (key === '__proto__' || key === 'constructor') continue;
+      out[key] = decodeURIComponent(part.slice(idx + 1).trim());
+    }
   }
   return out;
 }

@@ -52,12 +52,14 @@ function timed(fn) {
 }
 
 function runNode(scriptBody, arg) {
-  const r = spawnSync(
-    process.execPath,
-    ['-e', `(async () => { ${scriptBody} })().catch((e) => { console.error(e); process.exit(1); })`, arg],
-    { encoding: 'utf8', timeout: 120_000 },
-  );
-  if (r.status !== 0) throw new Error(r.stderr || r.stdout || 'subprocess failed');
+  const tmpScript = join(tmpdir(), `zk-bench-script-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`);
+  writeFileSync(tmpScript, `(async () => { ${scriptBody} })().catch((e) => { console.error(e); process.exit(1); })`);
+  try {
+    const r = spawnSync(process.execPath, [tmpScript, arg], { encoding: 'utf8', timeout: 120_000 });
+    if (r.status !== 0) throw new Error(r.stderr || r.stdout || 'subprocess failed');
+  } finally {
+    try { import('node:fs').then(fs => fs.rmSync(tmpScript)); } catch {}
+  }
 }
 
 function directProveScript() {

@@ -13,6 +13,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifyRateLimit from '@fastify/rate-limit';
 import {
   artifactPaths,
   artifactsExist,
@@ -45,6 +46,11 @@ const CSP =
 export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
   const app = Fastify({ logger: false, disableRequestLogging: true });
   const nowMs = deps.nowMs ?? Date.now;
+
+  app.register(fastifyRateLimit, {
+    max: 100,
+    timeWindow: '1 minute'
+  });
 
   app.addHook('onSend', async (_req, reply, payload) => {
     reply.header('X-Content-Type-Options', 'nosniff');

@@ -90,7 +90,7 @@ async function main() {
     );
     if (deploy.status !== 0) throw new Error(`forge deploy failed: ${deploy.stderr}`);
     const proxy = extractProxy(contractsDir);
-    if (!proxy) throw new Error('no ERC1967Proxy address in broadcast output');
+    if (!proxy || !/^0x[a-fA-F0-9]{40}$/.test(proxy)) throw new Error('invalid or no ERC1967Proxy address in broadcast output');
     console.log(`   registry proxy: ${proxy}`);
     ok(proxy.startsWith('0x'), 'deployed registry proxy');
 
