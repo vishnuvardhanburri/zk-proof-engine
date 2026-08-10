@@ -42,16 +42,27 @@ export class ApiClientError extends Error {
   }
 }
 
-/** Wire shape of a proof submission; metadata fields (curve, protocol, …) are
- * stripped BEFORE signing so the canonical body always matches what the server
- * schema accepts (additionalProperties: false). */
 export function normalizeSubmission(submission: unknown): unknown {
-  const s = submission as { circuitId?: unknown; proof?: unknown; publicInputs?: unknown };
-  if (!s.proof || typeof s.proof !== 'object') return submission;
-  const p = s.proof as Record<string, unknown>;
-  const { pi_a, pi_b, pi_c } = p;
-  if (!Array.isArray(pi_a) || !Array.isArray(p.pi_b) || !Array.isArray(pi_c)) return submission;
-  return { circuitId: s.circuitId, proof: { pi_a, pi_b, pi_c }, publicInputs: s.publicInputs };
+  if (typeof submission !== 'object' || !submission) return {};
+  const s = submission as Record<string, unknown>;
+  
+  let proof: unknown = s.proof;
+  if (s.proof && typeof s.proof === 'object') {
+    const p = s.proof as Record<string, unknown>;
+    if (Array.isArray(p.pi_a) && Array.isArray(p.pi_b) && Array.isArray(p.pi_c)) {
+      proof = {
+        pi_a: Array.from(p.pi_a).map(String),
+        pi_b: Array.from(p.pi_b).map(val => Array.isArray(val) ? Array.from(val).map(String) : String(val)),
+        pi_c: Array.from(p.pi_c).map(String),
+      };
+    }
+  }
+
+  return { 
+    circuitId: s.circuitId ? String(s.circuitId) : undefined, 
+    proof, 
+    publicInputs: Array.isArray(s.publicInputs) ? Array.from(s.publicInputs).map(String) : undefined 
+  };
 }
 
 /** Sign and issue a request; returns parsed JSON or throws ApiClientError. */

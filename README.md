@@ -5,9 +5,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/vishnuvardhanburri/zk-proof-engine/actions"><img src="https://img.shields.io/github/actions/workflow/status/vishnuvardhanburri/zk-proof-engine/ci.yml?branch=main&label=CI&style=flat-square" alt="CI Status"></a>
-  <a href="https://github.com/vishnuvardhanburri/zk-proof-engine/actions"><img src="https://img.shields.io/github/actions/workflow/status/vishnuvardhanburri/zk-proof-engine/contracts.yml?branch=main&label=Contracts%20CI&style=flat-square" alt="Contracts CI Status"></a>
-  <a href="https://github.com/vishnuvardhanburri/zk-proof-engine/actions"><img src="https://img.shields.io/github/actions/workflow/status/vishnuvardhanburri/zk-proof-engine/secret-scan.yml?branch=main&label=Secret%20Scan&style=flat-square" alt="Secret Scan Status"></a>
   <a href="SECURITY.md"><img src="https://img.shields.io/badge/Security-Policy-blue?style=flat-square" alt="Security Policy"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/Proving%20System-Groth16%20%2F%20BN254-purple?style=flat-square" alt="Proving System">

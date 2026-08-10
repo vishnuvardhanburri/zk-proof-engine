@@ -24,9 +24,7 @@ export class AuditLog implements AuditSinkPort {
     if (this.ring.length > this.cap) this.ring.shift();
     if (this.filePath) {
       try {
-        const line = JSON.stringify(event);
-        // codeql[js/log-injection] False positive: JSON.stringify does not emit literal newlines without a space argument.
-        // codeql[js/uncontrolled-file-write] False positive: filePath is configured locally by the administrator.
+        const line = JSON.stringify(event).replace(/\r/g, '').replace(/\n/g, '');
         appendFileSync(this.filePath, line + '\n', 'utf8');
       } catch (err) {
         throw new Error(`audit file write failed: ${(err as Error).message}`);

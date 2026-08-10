@@ -13,7 +13,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import fastifyStatic from '@fastify/static';
-import fastifyRateLimit from '@fastify/rate-limit';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 import {
   artifactPaths,
   artifactsExist,
@@ -47,9 +47,9 @@ export async function buildDashboardServer(deps: DashboardDeps): Promise<Fastify
   const app = Fastify({ logger: false, disableRequestLogging: true });
   const nowMs = deps.nowMs ?? Date.now;
 
-  await app.register(fastifyRateLimit, {
-    max: 100,
-    timeWindow: '1 minute'
+  const rateLimiter = new RateLimiterMemory({
+    points: 100,
+    duration: 60,
   });
 
   app.addHook('onSend', async (_req, reply, payload) => {
@@ -61,6 +61,11 @@ export async function buildDashboardServer(deps: DashboardDeps): Promise<Fastify
   });
 
   app.addHook('preHandler', async (req, reply) => {
+    try {
+      await rateLimiter.consume(req.ip);
+    } catch {
+      return reply.code(429).send({ code: 'too_many_requests', detail: 'Rate limit exceeded' });
+    }
     if (isPublic(req.url)) return;
     const token = parseCookies(req.headers.cookie).get(COOKIE_NAME);
     if (!verifySession(deps.config.sessionSecret, token, nowMs())) {
