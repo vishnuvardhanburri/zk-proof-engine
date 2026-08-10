@@ -79,8 +79,7 @@ jobs:
 
       - name: Slither (scoped to our contracts, triaged exclusions)
         run: |
-          slither src/ \
-            --solc-remaps "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/ @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/" \
+          slither . \
             --filter-paths "VerifierPoseidonPreimage|VerifierMerkleInclusion|openzeppelin|forge-std" \
             --exclude naming-conventions,unindexed-event,assembly,deprecated-standalone,low-level-calls,boolean-equal,missing-inheritance,arbitrary-send-eth,timestamp \
             --fail-low
