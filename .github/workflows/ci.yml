@@ -125,10 +125,10 @@ jobs:
         run: npm ci
       - name: npm audit (production deps, critical)
         run: npm audit --omit=dev --audit-level=critical
-      - name: Install osv-scanner (pinned v1.9.2)
+      - name: Install osv-scanner (pinned v1.9.2 with SHA-256)
         run: |
-          curl -sSL https://github.com/google/osv-scanner/releases/download/v1.9.2/osv-scanner_linux_amd64.zip -o /tmp/osv-scanner.zip
-          unzip -o /tmp/osv-scanner.zip -d /tmp/osv-scanner
-          sudo install -m 0755 /tmp/osv-scanner/osv-scanner-linux-amd64 /usr/local/bin/osv-scanner
+          curl -sSL https://github.com/google/osv-scanner/releases/download/v1.9.2/osv-scanner_linux_amd64 -o /tmp/osv-scanner
+          echo "d6af4b67fa5de658598bd2d445efb99e90d1734b3146962418719c4350ecb74b  /tmp/osv-scanner" | sha256sum -c -
+          sudo install -m 0755 /tmp/osv-scanner /usr/local/bin/osv-scanner
       - name: osv-scan workspace lockfile
         run: osv-scanner scan --lockfile package-lock.json --recursive
