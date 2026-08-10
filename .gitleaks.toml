@@ -25,6 +25,10 @@ useDefault = true
 #    - circuit-lib build/*.manifest.json: certified artifact digests and the
 #      vkHash (public verification key hash; manifests are the committed
 #      contract per ADR-0008).
+# 4) Technical documentation and CLI integration tests containing synthetic
+#    idempotency keys or build artifact path extensions ("r1cs/zkey/wasm"):
+#    - CHANGELOG.md: Describes circom build outputs.
+#    - packages/cli/test/production-validation.test.ts: Mock idempotency key string.
 paths = [
   "packages/keys/test/envelope.test.ts",
   "packages/keys/test/keypair.test.ts",
@@ -35,4 +39,6 @@ paths = [
   ".gitgate/gate-envelope.json",
   "packages/circuit-lib/build/merkle-inclusion.manifest.json",
   "packages/circuit-lib/build/poseidon-preimage.manifest.json",
+  "CHANGELOG.md",
+  "packages/cli/test/production-validation.test.ts",
 ]
