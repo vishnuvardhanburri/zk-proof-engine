@@ -26,8 +26,8 @@ export class AuditLog implements AuditSinkPort {
       try {
         const safeEvent = {
           ...event,
-          ip: event.ip.replace(/[\r\n]/g, ''),
-          action: event.action.replace(/[\r\n]/g, '')
+          ...(event.ip ? { ip: event.ip.replace(/[\r\n]/g, '') } : {}),
+          ...(event.action ? { action: event.action.replace(/[\r\n]/g, '') } : {})
         };
         const line = JSON.stringify(safeEvent);
         appendFileSync(this.filePath, line + '\n', 'utf8');

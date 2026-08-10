@@ -13,6 +13,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifyRateLimit from '@fastify/rate-limit';
 import {
   artifactPaths,
   artifactsExist,
@@ -48,7 +49,7 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
 
   app.register(fastifyRateLimit, {
     max: 100,
-    timeWindow: '1 minute'
+    timeWindow: 60000
   });
 
   app.addHook('onSend', async (_req, reply, payload) => {
@@ -59,18 +60,24 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
     return payload;
   });
 
-  app.addHook('onRequest', async (req, reply) => {
-    if (isPublic(req.url)) return;
+  const requireAuth = async (req: import('fastify').FastifyRequest, reply: FastifyReply) => {
     const token = parseCookies(req.headers.cookie).get(COOKIE_NAME);
     if (!verifySession(deps.config.sessionSecret, token, nowMs())) {
       return reply.code(401).send({ code: 'unauthorized', detail: 'login required' });
     }
-  });
+  };
 
   // ---- public ----
   app.get('/api/health', async () => ({ ok: true }));
 
-  app.post('/api/auth/login', async (req, reply) => {
+  app.post('/api/auth/login', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 60000
+      }
+    }
+  }, async (req, reply) => {
     const body = (req.body ?? {}) as { password?: unknown };
     if (typeof body.password !== 'string') {
       return reply.code(400).send({ code: 'bad_request', detail: 'password required' });
@@ -90,14 +97,26 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
       .send({ ok: true });
   });
 
-  app.get('/api/auth/whoami', async (req, reply) => {
+  app.get('/api/auth/whoami', {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 60000
+      }
+    }
+  }, async (req, reply) => {
     const session = verifySession(deps.config.sessionSecret, parseCookies(req.headers.cookie).get(COOKIE_NAME), nowMs());
     if (!session) return reply.code(401).send({ code: 'unauthorized', detail: 'login required' });
     return { ok: true, expiresMs: session.expiresMs };
   });
 
+  const authConfig = {
+    preHandler: requireAuth,
+    config: { rateLimit: { max: 100, timeWindow: 60000 } }
+  };
+
   // ---- authenticated read-only surface ----
-  app.get('/api/registry', async (_req, reply) => {
+  app.get('/api/registry', authConfig, async (_req, reply) => {
     if (!deps.api) return apiUnconfigured(reply);
     try {
       return await deps.api.registryInfo();
@@ -106,7 +125,7 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
     }
   });
 
-  app.get('/api/circuits', async (_req, reply) => {
+  app.get('/api/circuits', authConfig, async (_req, reply) => {
     if (!deps.api) return apiUnconfigured(reply);
     let remote: { circuits: CircuitSummary[] };
     try {
@@ -121,7 +140,7 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
     return { circuits };
   });
 
-  app.get('/api/circuits/:circuitId', async (req, reply) => {
+  app.get('/api/circuits/:circuitId', authConfig, async (req, reply) => {
     const { circuitId } = req.params as { circuitId: string };
     if (!CIRCUIT_ID_RE.test(circuitId)) {
       return reply.code(400).send({ code: 'bad_request', detail: 'invalid circuitId' });
@@ -138,7 +157,7 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
     return enrichCircuit(base);
   });
 
-  app.get('/api/proofs/status/:circuitId/:publicInputHash', async (req, reply) => {
+  app.get('/api/proofs/status/:circuitId/:publicInputHash', authConfig, async (req, reply) => {
     const { circuitId, publicInputHash } = req.params as { circuitId: string; publicInputHash: string };
     if (!CIRCUIT_ID_RE.test(circuitId) || !HASH_RE.test(publicInputHash)) {
       return reply.code(400).send({ code: 'bad_request', detail: 'invalid circuitId or publicInputHash' });
@@ -151,7 +170,7 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
     }
   });
 
-  app.get('/api/audit', async (req, reply) => {
+  app.get('/api/audit', authConfig, async (req, reply) => {
     if (!deps.api) return apiUnconfigured(reply);
     const raw = (req.query ?? {}) as { limit?: string };
     const limit = Math.min(1000, Math.max(1, Number(raw.limit ?? '50') || 50));
@@ -162,9 +181,9 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
     }
   });
 
-  app.get('/api/gatekeeper', async () => deps.gateReports.overview());
+  app.get('/api/gatekeeper', authConfig, async () => deps.gateReports.overview());
 
-  app.get('/api/gatekeeper/report/:file', async (req, reply) => {
+  app.get('/api/gatekeeper/report/:file', authConfig, async (req, reply) => {
     const { file } = req.params as { file: string };
     const detail = await deps.gateReports.readDetail(file);
     if (!detail) return reply.code(404).send({ code: 'not_found', detail: 'report not found' });

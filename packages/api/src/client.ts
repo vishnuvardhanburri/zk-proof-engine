@@ -48,7 +48,7 @@ export function normalizeSubmission(submission: unknown): unknown {
   
   const safeStr = (v: unknown) => {
     const str = String(v);
-    if (!/^[a-zA-Z0-9_\-\.]+$/.test(str)) return '';
+    if (!/^[a-zA-Z0-9_\-\.]+$/.test(str)) throw new Error('Invalid format');
     return str;
   };
   const safeArr = (arr: unknown) => Array.isArray(arr) ? Array.from(arr).map(safeStr) : [];
