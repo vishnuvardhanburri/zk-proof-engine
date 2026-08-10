@@ -32,7 +32,7 @@
     "@opentelemetry/core": "^1.29.0",
     "@opentelemetry/exporter-trace-otlp-proto": "^0.56.0",
     "@opentelemetry/resources": "^1.29.0",
-    "@opentelemetry/sdk-trace-base": "^1.29.0",
+    "@opentelemetry/sdk-trace-base": "^2.10.0",
     "@opentelemetry/semantic-conventions": "^1.29.0",
     "@zkpe/circuit-lib": "0.2.0",
     "@zkpe/engine": "0.2.0",
