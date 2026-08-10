@@ -30,8 +30,6 @@ jobs:
         include:
           - language: javascript-typescript
             build-mode: none
-          - language: solidity
-            build-mode: none
 
     steps:
       - name: Checkout repository
