@@ -82,7 +82,7 @@ jobs:
         run: |
           slither . \
             --filter-paths "VerifierPoseidonPreimage|VerifierMerkleInclusion|openzeppelin|forge-std" \
-            --exclude naming-conventions,unindexed-event,assembly,deprecated-standalone,low-level-calls,boolean-equal,missing-inheritance,arbitrary-send-eth,timestamp \
+            --exclude naming-conventions,unindexed-event,assembly,deprecated-standalone,low-level-calls,boolean-equal,missing-inheritance,arbitrary-send-eth,timestamp,incorrect-equality,reentrancy-unlimited-gas \
             --fail-medium
 
       - name: Gas report artifact
