@@ -177,6 +177,8 @@ async function main() {
       console.log('   on-chain checks:', chain.map((c) => `${c.name}=${c.ok} (${c.detail})`).join(' | '));
     }
     ok(g.verified, 'registered proof passes the gate (on-chain enforcement)');
+    const leafCheck = g.report?.checks.find((c) => c.name === 'on-chain-proof');
+    ok(leafCheck?.ok === true, `exact proof leaf anchored (${leafCheck?.detail})`);
 
     // 7. scenario 2 — expiry: jump time past provedAt+maxAge, gate must BLOCK
     console.log('7. expiry scenario');
@@ -212,6 +214,8 @@ async function main() {
     writeFileSync(signed2File, JSON.stringify(signed2, null, 2));
     g = await gateProbe(signed2File, pub, proxy, 0);
     ok(!g.verified, 'unregistered proof is BLOCKED');
+    const leafMissing = g.report?.checks.find((c) => c.name === 'on-chain-proof');
+    ok(leafMissing?.ok === false, `exact proof leaf absent for unregistered proof (${leafMissing?.detail})`);
 
     console.log('\nGATE-E2E OK: registered → PASS | expired → BLOCK | revoked → BLOCK | unregistered → BLOCK (all against anvil registry via the real gate)');
     return 0;

@@ -52,9 +52,11 @@ rewrite the gate. Concretely:
   gate parameters come from **repo `vars`** (trusted), not from the PR.
 - `.gitgate/gate-envelope.json` and `.gitgate/gate-key.pub.jwk` are
   **committed** (public material only); the dev gate's private key stays
-  offline. When the `ZK_GATEKEEPER_PUBLIC_KEY` secret is configured it takes
-  precedence over the committed public key file (`public-key-file` fallback
-  in `.github/actions/zk-verify`).
+  offline. The CI gate trusts **only** the `ZK_GATEKEEPER_PUBLIC_KEY`
+  repository secret — the action fails fast when a signed envelope is
+  required and no secret key is present. `public-key-file` in
+  `.github/actions/zk-verify` is a **local development convenience only**
+  and is never used by the workflow.
 - `gatekeeper-fixture.mjs` is a **local development helper only** (it
   generates an ephemeral key); it is never invoked in CI. Production keys
   live in the repo secret `ZK_GATEKEEPER_PUBLIC_KEY` and the matching

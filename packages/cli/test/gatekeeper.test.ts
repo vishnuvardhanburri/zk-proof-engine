@@ -53,6 +53,7 @@ const okChain = [
   { name: 'on-chain-circuit', ok: true, detail: 'registered + active' },
   { name: 'on-chain-vk', ok: true, detail: 'vk matches' },
   { name: 'on-chain-status', ok: true, detail: 'proved' },
+  { name: 'on-chain-proof', ok: true, detail: 'exact proof leaf registered' },
   { name: 'on-chain-requireProved', ok: true, detail: 'unexpired' },
 ];
 
@@ -208,6 +209,30 @@ describe('gatekeeper-lib negative suite (M8)', () => {
     );
     expect(verified).toBe(false);
     expect(reasons.some((r) => r.includes('no trusted verification key'))).toBe(true);
+  });
+
+  it('blocks: claim proved on-chain but the EXACT proof object is not the anchored leaf', async () => {
+    const key = generateKeyPair();
+    const env = signedEnv(baseEnvelope(), key);
+    const { verified, reasons } = await runGate(
+      {
+        envelopeFile: 'p.json',
+        trustedPublicKey: JSON.stringify(key.publicJwk),
+        registry: { rpcUrl: 'x', proxy: '0x00' },
+      },
+      deps({
+        envelopeJson: JSON.stringify(env),
+        chain: [
+          { name: 'on-chain-circuit', ok: true, detail: 'registered' },
+          { name: 'on-chain-vk', ok: true, detail: 'vk matches' },
+          { name: 'on-chain-status', ok: true, detail: 'proved' },
+          { name: 'on-chain-proof', ok: false, detail: 'proof NOT exactly anchored on-chain' },
+          { name: 'on-chain-requireProved', ok: true, detail: 'unexpired' },
+        ],
+      }),
+    );
+    expect(verified).toBe(false);
+    expect(reasons.some((r) => r.includes('on-chain-proof'))).toBe(true);
   });
 
   it('blocks: proof not registered on-chain', async () => {

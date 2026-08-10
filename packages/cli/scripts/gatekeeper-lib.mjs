@@ -25,7 +25,7 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { getCircuitDefinition, loadManifest, computeVkHash } from '@zkpe/circuit-lib';
-import { canonicalize, publicInputHash, validateEnvelope } from '@zkpe/proof-format';
+import { canonicalize, proofAnchorFromEnvelope, publicInputHash, validateEnvelope } from '@zkpe/proof-format';
 import { verifyEnvelope } from '@zkpe/keys';
 import { verify as engineVerify, Circuit } from '@zkpe/engine';
 
@@ -317,6 +317,33 @@ export async function checkChain(circuitId, envelope, registry, report) {
   } catch (err) {
     out.push({ name: 'on-chain-status', ok: false, detail: `eth_call getProofStatus failed: ${err.message}` });
     return out;
+  }
+
+  // proofLeaves(bytes32) — EXACT binding: the very anchor
+  // keccak256(abi.encode(circuitId, vkHash, publicInputs, a, b, c)) that
+  // ZKVerifierRegistry.registerProof stored must exist as a leaf. A
+  // registered claim with a different (or swapped) proof object never
+  // satisfies this, even when status on the claim anchor says Proved.
+  const leafHash = proofAnchorFromEnvelope(
+    circuitId,
+    envelope.vkHash ?? '',
+    envelope.publicInputs,
+    envelope.proof,
+  );
+  const selLeaf = '0x43e3147e';
+  const dataLeaf = `${selLeaf}${leafHash.slice(2)}`;
+  try {
+    const raw = await rpc('eth_call', [{ to: proxy, data: dataLeaf }, 'latest']);
+    const leaf = raw.slice(2, 66) === '0'.repeat(63) + '1';
+    out.push({
+      name: 'on-chain-proof',
+      ok: leaf,
+      detail: leaf
+        ? `exact proof leaf registered (${leafHash})`
+        : `proof NOT exactly anchored on-chain (${leafHash})`,
+    });
+  } catch (err) {
+    out.push({ name: 'on-chain-proof', ok: false, detail: `eth_call proofLeaves failed: ${err.message}` });
   }
 
   // requireProved(bytes32, bytes32, uint256) — revert means expired/not proved

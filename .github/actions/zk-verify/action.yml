@@ -22,8 +22,9 @@ inputs:
     required: false
   public-key-file:
     description: >-
-      Path to a committed Ed25519 public JWK file, used only when public-key
-      is not configured (repo secret unset). The secret takes precedence.
+      LOCAL-DEV ONLY: path to a committed Ed25519 public JWK file. The CI
+      workflow must never pass this — the gate trusts only the repo-secret key
+      (public-key). Fail-fast when require-signed is set and no key is given.
     required: false
   require-signed:
     description: 'Reject unsigned (v1) envelopes'
@@ -98,6 +99,9 @@ runs:
           args+=(--public-key "$GK_PUBLIC_KEY")
         elif [ -n "$GK_PUBLIC_KEY_FILE" ]; then
           args+=(--public-key-file "$GK_PUBLIC_KEY_FILE")
+        elif [ "$GK_REQUIRE_SIGNED" = "true" ]; then
+          echo "gate: no trusted verification key — public-key (repo secret) is REQUIRED for signed envelopes" >&2
+          exit 1
         fi
         if [ -n "$GK_ALLOWLIST" ]; then
           args+=(--vk-allowlist "$GK_ALLOWLIST")

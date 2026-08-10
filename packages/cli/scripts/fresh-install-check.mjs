@@ -35,7 +35,27 @@ function npm(...args) {
   const cmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   // .cmd files (Windows) are not directly spawnable — run through the shell.
   opts.shell = process.platform === 'win32';
-  return execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024, ...opts });
+  // Windows gotcha: piped stdio can make execFileSync wait on grandchild
+  // handles that outlive npm (stuck 40-min CI legs). The install phase
+  // inherits the console so completion is driven by process exit; every
+  // call is time-bounded so a stuck run FAILS LOUDLY instead of hanging.
+  opts.stdio = opts.stdio ?? 'pipe';
+  opts.timeout = opts.timeout ?? 10 * 60 * 1000;
+  return execFileSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...opts });
+}
+
+function run(zkBin, args, cwd) {
+  return execFileSync(zkBin, args, {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, HOME: cwd, USERPROFILE: cwd },
+    stdio: ['ignore', 'pipe', 'pipe'],
+    // Outputs below are asserted on, so pipes stay; a timeout turns a hang
+    // into a hard failure with a diagnostic instead of a silent CI stall.
+    timeout: 60 * 1000,
+    // .cmd shims (Windows) are not directly spawnable — run via the shell.
+    shell: process.platform === 'win32',
+  });
 }
 
 const projectDir = mkdtempSync(join(tmpdir(), 'zk-fresh-'));
@@ -75,34 +95,29 @@ const zkpeDeps = Object.fromEntries(
     ),
   );
   console.log('installing tarballs into ' + projectDir);
-  npm('install', '--no-audit', '--no-fund', '--loglevel=error', { cwd: projectDir });
+  npm('install', '--no-audit', '--no-fund', '--loglevel=error', { cwd: projectDir, stdio: 'inherit' });
 
   const zkBin = join(projectDir, 'node_modules', '.bin', process.platform === 'win32' ? 'zk.cmd' : 'zk');
 
-  const run = (args, cwd = projectDir) =>
-    execFileSync(zkBin, args, {
-      cwd,
-      encoding: 'utf8',
-      env: { ...process.env, HOME: projectDir, USERPROFILE: projectDir },
-      stdio: ['ignore', 'pipe', 'pipe'],
-      // .cmd shims (Windows) are not directly spawnable — run via the shell.
-      shell: process.platform === 'win32',
-    });
-
-  const help = run(['--help']);
+  const help = run(zkBin, ['--help'], projectDir);
   for (const cmd of ['prove', 'verify', 'register', 'deploy']) {
     if (help.includes(cmd) === false) throw new Error(`fresh install help missing command: ${cmd}`);
   }
 
-  const envSet = run(['env', 'set', '--api-url', 'http://127.0.0.1:8080', '--client-id', 'fresh', '--secret', 's'.repeat(40)]);
+  const envSet = run(zkBin, ['env', 'set', '--api-url', 'http://127.0.0.1:8080', '--client-id', 'fresh', '--secret', 's'.repeat(40)], projectDir);
   if (envSet.includes('<redacted>') === false) throw new Error('fresh install env set did not redact the secret');
-  const envShow = run(['env', 'show']);
+  const envShow = run(zkBin, ['env', 'show'], projectDir);
   if (envShow.includes('<redacted:') === false) throw new Error(`fresh install env show did not redact: ${envShow}`);
 
-  const _newOut = run(['new', 'poseidon-preimage', 'proj']);
+  const _newOut = run(zkBin, ['new', 'poseidon-preimage', 'proj'], projectDir);
   if (existsSync(join(projectDir, 'proj', 'inputs.json')) === false) throw new Error('fresh install: zk new did not write inputs.json');
 
   console.log('fresh-install OK: pack → install → help/env/new all working');
 } finally {
-  rmSync(projectDir, { recursive: true, force: true });
+  try {
+    rmSync(projectDir, { recursive: true, force: true });
+  } catch {
+    // Windows may keep files locked briefly after a timed-out npm child;
+    // never mask the real failure with a cleanup error.
+  }
 }

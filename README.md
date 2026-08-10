@@ -87,8 +87,9 @@ Notable behaviors:
 - [10 Circuit Interface Design](docs/10-circuit-interface-design.md)
 - [11 Performance Targets](docs/11-performance-targets.md)
 - [12 Cryptographic Design Review](docs/12-crypto-design-review.md)
-- ADRs: [docs/adr/](docs/adr/) (0001–0008)
+- ADRs: [docs/adr/](docs/adr/) (0001–0012)
 - [CI/CD Gatekeeper](docs/19-gatekeeper.md) (M7–M8)
+- [21 Trusted-Setup Plan](docs/21-trusted-setup-plan.md) (DEBT-1, prod ceremony)
 
 ## Status
 

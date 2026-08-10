@@ -1,7 +1,7 @@
 # 07 — Milestone Roadmap
 
-**Status:** Active — implemented through M8 (2026-08-09). M9 in progress
-(working tree, uncommitted). M10–M12 not started (release-blockers gate).
+**Status:** Active — implemented through M10 (2026-08-10). M11 in progress
+(working tree, uncommitted). M12 not started (release-blockers gate).
 **Date:** 2026-08-07
 
 ---
@@ -28,9 +28,9 @@
 | 6 | Developer CLI | ✅ Complete 2026-08-09 — `zk` CLI (TypeScript): `env set`, `new`, `prove`, `verify`, `register`, `status`, `registry`, `deploy`, completions; artifact hashing + envelope signing | CLI e2e tests pass against local anvil + API (58 tests + e2e-flow green) |
 | 7 | GitHub Action | ✅ Complete 2026-08-09 — composite action `zk-verify` (repo-pinned) wrapping `gatekeeper-probe.mjs`; artifact-binding + on-chain inputs; report outputs | Action tested on a demo PR; PR-head read-only checkout |
 | 8 | CI/CD Gatekeeper | ✅ Complete 2026-08-09 — Gatekeeper required-status: signed proof envelope, certified vkHash allow-list, artifact binding, trusted-key signature (secret), on-chain enforcement (registered/active/unrevoked/unexpired); `pull_request_target` trust boundary; `gate-negative` job runs 14 negative tests; on-chain e2e (registered→pass, expired/revoked/unregistered→block); branch-protection docs | Gate blocks unsigned/no-proof PR; bypass attempt fails; report visible — ADR-0012, docs/19 |
-| 9 | Dashboard | ✅ in progress (2026-08-09): `packages/dashboard` (uncommitted) — React dashboard: proof search, circuit health, registry viewer, gatekeeper reports, verify demo; read-only BFF w/ session auth; risks (XSS defenses, CSP); Vitest + `scripts/smoke-dashboard.mjs` e2e smoke | Dashboard tests green (~13); no `dangerouslySetInnerHTML` used; smoke green |
+| 9 | Dashboard | ✅ implemented (2026-08-10): `packages/dashboard` — React dashboard: proof search, circuit health, registry viewer, gatekeeper reports, verify demo; read-only BFF w/ session auth; risks (XSS defenses, CSP); Vitest + `scripts/smoke-dashboard.mjs` e2e smoke — see docs/20 | Dashboard tests green (~13); no `dangerouslySetInnerHTML` used; smoke green |
 | 10 | Documentation | User guide, API reference (OpenAPI), security model, ops/runbook, ADR index, glossary; CI link-check on `docs/` | `docs` CI check passes; every CLI command documented |
-| 11 | End-to-End Tests | Playwright+node orchestration: full journey (prove → verify → deploy → register → API → dashboard), on CI nightly job, cleanup | Full journey green on fresh-env; artifacts archived |
+| 11 | End-to-End Tests | in progress (2026-08-10): node orchestration journey (prove → verify → register → on-chain gate) green locally; CI job (anvil) being committed; Playwright dashboard leg pending, on CI nightly job, cleanup | Full journey green on fresh-env; artifacts archived |
 | 12 | Hardening + Release | External audit checklist applied, full `osv-scanner`/`snyk` scan, perf budget on verify gas, v1.0.0 release tag, prod setup MOP | Release checklist 100%; audit findings closed/none |
 
 ## 3. Mapping to Components

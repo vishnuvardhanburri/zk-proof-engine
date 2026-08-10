@@ -57,7 +57,7 @@ These are *intentional* deferrals, recorded now so they never become silent debt
 
 | ID | Item | Deferred to | Why |
 |----|------|-------------|-----|
-| DEBT-1 | Community trusted-setup ceremony (prod) | Post-Milestone 8 | Requires stakeholders; dev PTau is sufficient until then |
+| DEBT-1 | Community trusted-setup ceremony (prod) | Post-Milestone 8 | Requires stakeholders; dev PTau is sufficient until then — operating plan: docs/21 |
 | DEBT-2 | Multi-chain registry (zkSync/Arbitrum) | Post-Milestone 12 | Single-EVM scope approved for v1 |
 | DEBT-3 | Recursive/aggregated proofs | Post-Milestone 12 | Groth16 single-proof satisfies v1 gatekeeper needs |
 | DEBT-4 | Key management service for API signing | Post-Milestone 6 | API-key HMAC covers v1; KMS is infra decision |

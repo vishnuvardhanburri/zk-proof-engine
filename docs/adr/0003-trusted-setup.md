@@ -28,3 +28,7 @@ Two-tier setup:
 ## Alternatives considered
 - KZG-style transparent setup (PLONK): rejected in ADR-0002.
 - Single ceremony for all: rejected — circuit churn would invalidate zkeys.
+
+## Operational plan
+The ceremony runbook (checksums, air-gap steps, attestations, prod keygen flow,
+M12 acceptance) is tracked in `docs/21-trusted-setup-plan.md` (DEBT-1 closure plan).

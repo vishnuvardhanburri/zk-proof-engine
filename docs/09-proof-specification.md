@@ -223,6 +223,17 @@ cannot claim what isn't built, this document explicitly **defers** it:
 > roadmap milestone M12+ (post-release), tracked as "source→binary provenance
 > circuit".
 
+**Namespace + certification rule (future-circuit-only):** `source-build@*` is
+reserved for provenance circuits and is the ONLY namespace that may carry a
+source→binary claim. No historical circuit (`poseidon-preimage@1`,
+`merkle-inclusion@1`) may be re-labeled as a provenance circuit in the
+registry allow-list — `vkHash` certification (ADR-0012) is the sole entry
+path for any `source-build@*` circuit, and the gatekeeper rejects allow-list
+entries whose `circuitId` is not certified. Retroactive "provenance" claims
+on v1 artifacts (e.g. bolting a source digest onto an envelope post-hoc) are
+invalid by definition and must be refused at the API layer (no such field in
+`proof-format` v1).
+
 ## 8. Versioning & Evolution
 
 - `circuitId@major` is immutable once frozen; changes bump `circuitVersion`
