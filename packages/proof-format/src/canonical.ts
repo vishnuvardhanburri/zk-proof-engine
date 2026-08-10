@@ -13,8 +13,7 @@
 type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
 
 function isPlainObject(v: unknown): v is Record<string, JsonValue> {
-  if (typeof v !== 'object' || v === null) return false;
-  return !Array.isArray(v);
+  return v ? (typeof v === 'object' && !Array.isArray(v)) : false;
 }
 
 function stringifyValue(value: unknown, out: string[]): void {

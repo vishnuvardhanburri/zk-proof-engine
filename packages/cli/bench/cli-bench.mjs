@@ -51,43 +51,41 @@ function timed(fn) {
   return Number(process.hrtime.bigint() - t0) / 1e6;
 }
 
-function runNode(scriptBody, arg) {
-  const tmpScript = join(tmpdir(), `zk-bench-script-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`);
-  writeFileSync(tmpScript, `(async () => { ${scriptBody} })().catch((e) => { console.error(e); process.exit(1); })`);
-  try {
-    const r = spawnSync(process.execPath, [tmpScript, arg], { encoding: 'utf8', timeout: 120_000 });
-    if (r.status !== 0) throw new Error(r.stderr || r.stdout || 'subprocess failed');
-  } finally {
-    try { import('node:fs').then(fs => fs.rmSync(tmpScript)); } catch {}
-  }
+const dir = mkdtempSync(join(tmpdir(), 'zk-bench-'));
+const proveScriptFile = join(dir, 'prove.mjs');
+const verifyScriptFile = join(dir, 'verify.mjs');
+
+writeFileSync(proveScriptFile, `
+  const { Circuit, prove } = await import(${JSON.stringify('file://' + engineEntry)});
+  const { readFileSync } = await import('node:fs');
+  const inputs = JSON.parse(readFileSync(process.argv[2], 'utf8'));
+  const c = await Circuit.load('poseidon-preimage');
+  await prove(c, inputs);
+  process.exit(0);
+`);
+
+writeFileSync(verifyScriptFile, `
+  const { Circuit, verify } = await import(${JSON.stringify('file://' + engineEntry)});
+  const { readFileSync } = await import('node:fs');
+  const env = JSON.parse(readFileSync(process.argv[2], 'utf8'));
+  const c = await Circuit.load(env.circuitId);
+  const res = await verify(c, env.publicInputs, env.proof);
+  if (!res.valid) throw new Error('direct verify rejected');
+  process.exit(0);
+`);
+
+function runNode(scriptFile, arg) {
+  const r = spawnSync(process.execPath, [scriptFile, arg], { encoding: 'utf8', timeout: 120_000 });
+  if (r.status !== 0) throw new Error(r.stderr || r.stdout || 'subprocess failed');
 }
 
-function directProveScript() {
-  return `
-    const { Circuit, prove } = await import(${JSON.stringify('file://' + engineEntry)});
-    const { readFileSync } = await import('node:fs');
-    const inputs = JSON.parse(readFileSync(process.argv[1], 'utf8'));
-    const c = await Circuit.load('poseidon-preimage');
-    await prove(c, inputs);
-    process.exit(0);`;
-}
 
-function directVerifyScript() {
-  return `
-    const { Circuit, verify } = await import(${JSON.stringify('file://' + engineEntry)});
-    const { readFileSync } = await import('node:fs');
-    const env = JSON.parse(readFileSync(process.argv[1], 'utf8'));
-    const c = await Circuit.load(env.circuitId);
-    const res = await verify(c, env.publicInputs, env.proof);
-    if (!res.valid) throw new Error('direct verify rejected');
-    process.exit(0);`;
-}
 
 function cli(opts) {
   return spawnSync(process.execPath, [cliBin, ...opts], { encoding: 'utf8', timeout: 120_000 });
 }
 
-const dir = mkdtempSync(join(tmpdir(), 'zk-bench-'));
+
 const inputsFile = join(dir, 'inputs.json');
 const outFile = join(dir, 'proof.json');
 writeFileSync(inputsFile, JSON.stringify({ preimage: ['123456789', '987654321'] }));
@@ -100,7 +98,7 @@ const results = { prove: { direct: [], cli: [] }, verify: { direct: [], cli: [] 
 
 for (let i = 0; i < ITERS; i++) {
   results.prove.direct.push(
-    timed(() => runNode(directProveScript(), inputsFile)),
+    timed(() => runNode(proveScriptFile, inputsFile)),
   );
   results.prove.cli.push(
     timed(() => {
@@ -109,7 +107,7 @@ for (let i = 0; i < ITERS; i++) {
     }),
   );
 
-  results.verify.direct.push(timed(() => runNode(directVerifyScript(), outFile)));
+  results.verify.direct.push(timed(() => runNode(verifyScriptFile, outFile)));
   results.verify.cli.push(
     timed(() => {
       const r = cli(['verify', outFile, '--offline']);

@@ -20,7 +20,7 @@ function findWebDir(dir: string): string | undefined {
   return candidates.find((d) => existsSync(join(d, 'index.html')));
 }
 
-function main(): void {
+async function main(): Promise<void> {
   let config;
   try {
     config = parseConfig(process.env);
@@ -32,7 +32,7 @@ function main(): void {
     throw err;
   }
   const webDir = findWebDir(import.meta.dirname);
-  const app = buildDashboardServer({
+  const app = await buildDashboardServer({
     config,
     api: config.apiUrl && config.apiKey && config.apiSecret
       ? new ApiClientDashboardPort({ baseUrl: config.apiUrl, clientId: config.apiKey, secret: config.apiSecret })

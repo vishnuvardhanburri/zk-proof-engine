@@ -43,11 +43,11 @@ const CSP =
   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; " +
   "connect-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
 
-export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
+export async function buildDashboardServer(deps: DashboardDeps): Promise<FastifyInstance> {
   const app = Fastify({ logger: false, disableRequestLogging: true });
   const nowMs = deps.nowMs ?? Date.now;
 
-  app.register(fastifyRateLimit, {
+  await app.register(fastifyRateLimit, {
     max: 100,
     timeWindow: '1 minute'
   });
@@ -62,7 +62,7 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
 
   app.addHook('preHandler', async (req, reply) => {
     if (isPublic(req.url)) return;
-    const token = parseCookies(req.headers.cookie)[COOKIE_NAME];
+    const token = parseCookies(req.headers.cookie).get(COOKIE_NAME);
     if (!verifySession(deps.config.sessionSecret, token, nowMs())) {
       return reply.code(401).send({ code: 'unauthorized', detail: 'login required' });
     }
@@ -92,7 +92,7 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
   });
 
   app.get('/api/auth/whoami', async (req, reply) => {
-    const session = verifySession(deps.config.sessionSecret, parseCookies(req.headers.cookie)[COOKIE_NAME], nowMs());
+    const session = verifySession(deps.config.sessionSecret, parseCookies(req.headers.cookie).get(COOKIE_NAME), nowMs());
     if (!session) return reply.code(401).send({ code: 'unauthorized', detail: 'login required' });
     return { ok: true, expiresMs: session.expiresMs };
   });
