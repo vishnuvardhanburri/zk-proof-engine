@@ -50,7 +50,8 @@ contract CanonicalHashTest is Test {
             bytes32 vkHash = vm.parseJsonBytes32(raw, string.concat(pre, ".vkHash"));
             uint256[] memory pi = vm.parseJsonUintArray(raw, string.concat(pre, ".publicInputs"));
             uint256[] memory aJson = vm.parseJsonUintArray(raw, string.concat(pre, ".a"));
-            uint256[][] memory bJson = abi.decode(vm.parseJson(raw, string.concat(pre, ".b")), (uint256[][]));
+            uint256[][] memory bJson =
+                abi.decode(vm.parseJson(raw, string.concat(pre, ".b")), (uint256[][]));
             uint256[] memory cJson = vm.parseJsonUintArray(raw, string.concat(pre, ".c"));
             bytes memory enc = vm.parseBytes(vm.parseJsonString(raw, string.concat(pre, ".enc")));
             bytes32 expected = vm.parseJsonBytes32(raw, string.concat(pre, ".hash"));
@@ -82,7 +83,8 @@ contract CanonicalHashTest is Test {
         bytes32 vkHash = vm.parseJsonBytes32(raw, string.concat(pre, ".vkHash"));
         uint256[] memory pi = vm.parseJsonUintArray(raw, string.concat(pre, ".publicInputs"));
         uint256[] memory aJson = vm.parseJsonUintArray(raw, string.concat(pre, ".a"));
-        uint256[][] memory bJson = abi.decode(vm.parseJson(raw, string.concat(pre, ".b")), (uint256[][]));
+        uint256[][] memory bJson =
+            abi.decode(vm.parseJson(raw, string.concat(pre, ".b")), (uint256[][]));
         uint256[] memory cJson = vm.parseJsonUintArray(raw, string.concat(pre, ".c"));
         bytes32 storedLeaf = vm.parseJsonBytes32(raw, string.concat(pre, ".hash"));
 
