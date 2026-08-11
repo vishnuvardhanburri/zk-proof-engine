@@ -40,11 +40,15 @@ jobs:
           tar -czf zk-proof-engine-release.tar.gz packages sbom.json
       
       - name: Generate SLSA Build Provenance
-        uses: actions/attest-build-provenance@v1
+        id: attest
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
           subject-path: |
             zk-proof-engine-release.tar.gz
             sbom.json
+
+      - name: Export provenance for Scorecard
+        run: cp "${{ steps.attest.outputs.bundle-path }}" provenance.intoto.jsonl
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
@@ -62,4 +66,5 @@ jobs:
             sbom.json
             release.sig
             sbom.sig
+            provenance.intoto.jsonl
           generate_release_notes: true

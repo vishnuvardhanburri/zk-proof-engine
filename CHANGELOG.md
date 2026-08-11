@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.4] — 2026-08-11 — Fix Scorecard Provenance Missing
+
+### Security
+- Export SLSA build provenance as `provenance.intoto.jsonl` in the GitHub release artifacts so OpenSSF Scorecard can accurately detect and parse the native attestations.
+
 ## [0.9.3] — 2026-08-11 — Single-Job Release Workflow
 
 ### Fixed
