@@ -39,6 +39,7 @@ export class ListCircuitsUseCase {
       id: `aud_${randomUUID().slice(0, 8)}`,
       at: new Date().toISOString(),
       actor: ctx.actor,
+      tenantId: ctx.tenantId,
       action: 'circuit.list',
       resource: '/v1/circuits',
       outcome: 'ok',

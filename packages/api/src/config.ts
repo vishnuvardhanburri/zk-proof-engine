@@ -9,9 +9,10 @@ import { z } from 'zod';
 const keyEntry = z.string().refine(
   (entry) => {
     const parts = entry.split(':');
-    return parts.length === 3 && parts[0]!.length > 0 && parts[1]!.length >= 32;
+    // Formats: clientId:secret:roles  OR  clientId:secret:roles:tenantId
+    return (parts.length === 3 || parts.length === 4) && parts[0]!.length > 0 && parts[1]!.length >= 32;
   },
-  { message: 'expected clientId:secret(>=32 chars):role[,role]' },
+  { message: 'expected clientId:secret(>=32 chars):role[,role][:tenantId]' },
 );
 
 export const configSchema = z.object({
@@ -63,6 +64,8 @@ export interface KeyEntry {
   clientId: string;
   secret: string;
   roles: string[];
+  /** Tenant identifier; defaults to clientId when not specified. */
+  tenantId: string;
 }
 
 export function parseConfig(env: NodeJS.ProcessEnv): Config {
@@ -102,13 +105,19 @@ export class ConfigError extends Error {
 }
 
 /** Parse ZK_API_KEYS into structs (used by EnvSecretStore). */
-export function parseApiKeys(raw: string): { clientId: string; secret: string; roles: string[] }[] {
+export function parseApiKeys(raw: string): { clientId: string; secret: string; roles: string[]; tenantId: string }[] {
   return raw
     .split(';')
     .map((e) => e.trim())
     .filter(Boolean)
     .map((entry) => {
-      const [clientId, secret, rolesRaw] = entry.split(':');
-      return { clientId: clientId!, secret: secret!, roles: rolesRaw!.split(',').map((r) => r.trim()) };
+      const [clientId, secret, rolesRaw, tenantId] = entry.split(':');
+      return {
+        clientId: clientId!,
+        secret: secret!,
+        roles: rolesRaw!.split(',').map((r) => r.trim()),
+        // tenantId is optional: default to clientId for single-tenant deployments
+        tenantId: tenantId ?? clientId!,
+      };
     });
 }

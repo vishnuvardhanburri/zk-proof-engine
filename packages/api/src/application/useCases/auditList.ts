@@ -19,6 +19,7 @@ export class AuditListUseCase {
       id: `aud_${randomUUID().slice(0, 8)}`,
       at: new Date().toISOString(),
       actor: ctx.actor,
+      tenantId: ctx.tenantId,
       action: 'audit.read',
       resource: '/v1/audit',
       outcome: 'ok',

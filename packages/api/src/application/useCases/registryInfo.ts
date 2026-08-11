@@ -33,6 +33,7 @@ export class RegistryInfoUseCase {
       id: `aud_${randomUUID().slice(0, 8)}`,
       at: new Date().toISOString(),
       actor: ctx.actor,
+      tenantId: ctx.tenantId,
       action: 'registry.read',
       resource: '/v1/registry',
       outcome: 'ok',

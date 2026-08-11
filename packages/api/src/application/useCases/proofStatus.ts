@@ -34,6 +34,7 @@ export class ProofStatusUseCase {
       id: `aud_${randomUUID().slice(0, 8)}`,
       at: new Date().toISOString(),
       actor: ctx.actor,
+      tenantId: ctx.tenantId,
       action: 'proof.status',
       resource: '/v1/proofs/status',
       outcome: 'ok',

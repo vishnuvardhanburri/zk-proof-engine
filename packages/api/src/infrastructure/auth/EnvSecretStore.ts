@@ -24,7 +24,12 @@ export class EnvSecretStore implements SecretStorePort {
       if (this.byClientId.has(entry.clientId)) {
         throw new Error(`duplicate clientId "${entry.clientId}" in ZK_API_KEYS`);
       }
-      this.byClientId.set(entry.clientId, { clientId: entry.clientId, secret: entry.secret, roles });
+      this.byClientId.set(entry.clientId, {
+        clientId: entry.clientId,
+        secret: entry.secret,
+        roles,
+        tenantId: entry.tenantId,
+      });
     }
   }
 

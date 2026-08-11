@@ -171,6 +171,7 @@ export async function buildServer(deps: ServerDeps): Promise<FastifyInstance> {
         id: `aud_${randomUUID().slice(0, 8)}`,
         at: new Date().toISOString(),
         actor: principal.clientId,
+        tenantId: principal.tenantId,
         action: 'ratelimit.enforced',
         resource: req.url,
         outcome: 'denied',
@@ -194,6 +195,7 @@ export async function buildServer(deps: ServerDeps): Promise<FastifyInstance> {
   const execCtx = (req: FastifyRequest) => ({
     requestId: req.id,
     actor: req.zk?.principal?.clientId ?? 'anonymous',
+    tenantId: req.zk?.principal?.tenantId ?? 'anonymous',
     ip: req.ip,
   });
 

@@ -71,6 +71,7 @@ export class RegisterProofUseCase {
       id: `aud_${randomUUID().slice(0, 8)}`,
       at: new Date().toISOString(),
       actor: ctx.actor,
+      tenantId: ctx.tenantId,
       action: 'proof.register',
       resource: '/v1/proofs/register',
       outcome: 'ok',

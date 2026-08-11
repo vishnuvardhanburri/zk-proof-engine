@@ -4,6 +4,11 @@
  * Proof shapes are type-only imports from @zkpe/proof-format: the canonical
  * types hub. The API never re-implements any crypto or serialization — it
  * moves these values between the engine and the registry contract.
+ *
+ * Multi-tenancy: tenantId is always derived from the authenticated identity
+ * (EnvSecretStore → Authenticator → ApiPrincipal) and never from
+ * client-supplied request headers. It defaults to clientId, so single-tenant
+ * deployments require no configuration changes.
  */
 
 import type { Groth16Proof } from '@zkpe/proof-format';
@@ -70,6 +75,8 @@ export type Role = 'read' | 'submit' | 'write' | 'audit';
 
 export interface ApiPrincipal {
   clientId: string;
+  /** Tenant the client belongs to. Defaults to clientId when not specified. */
+  tenantId: string;
   roles: Set<Role>;
 }
 
@@ -77,6 +84,8 @@ export interface ClientSecret {
   clientId: string;
   secret: string;
   roles: Set<Role>;
+  /** Tenant this credential belongs to. Defaults to clientId when not specified. */
+  tenantId: string;
 }
 
 export type AuditAction =
@@ -97,6 +106,8 @@ export interface AuditEvent {
   id: string;
   at: string;
   actor: string;
+  /** Tenant that generated this audit event. Always server-derived. */
+  tenantId: string;
   action: AuditAction;
   resource: string;
   outcome: AuditOutcome;
@@ -116,5 +127,7 @@ export interface IdempotencyRecord {
 export interface ExecutionContext {
   requestId: string;
   actor: string;
+  /** Tenant context derived from the authenticated principal. Always server-derived. */
+  tenantId: string;
   ip?: string;
 }

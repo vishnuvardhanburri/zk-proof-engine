@@ -110,7 +110,7 @@ export class Authenticator {
       throw new DomainError('AUTH-REPLAY');
     }
 
-    return { clientId: client.clientId, roles: new Set(client.roles) };
+    return { clientId: client.clientId, tenantId: client.tenantId, roles: new Set(client.roles) };
   }
 }
 
