@@ -48,8 +48,9 @@ export function normalizeSubmission(submission: unknown): unknown {
   
   const safeStr = (v: unknown) => {
     const str = String(v);
-    if (!/^[a-zA-Z0-9_\-\.]+$/.test(str)) throw new Error('Invalid format');
-    return str;
+    const match = /^([a-zA-Z0-9_\-\.]+)$/.exec(str);
+    if (!match) throw new Error('Invalid format');
+    return match[1]!;
   };
   const safeArr = (arr: unknown) => Array.isArray(arr) ? Array.from(arr).map(safeStr) : [];
 
@@ -170,7 +171,12 @@ export class ApiClient {
   }
 
   async proofStatus(circuitId: string, publicInputHash: string): Promise<unknown> {
-    return signedFetch(this.cfg, 'GET', `/v1/proofs/status/${circuitId}/${publicInputHash}`);
+    const cidMatch = /^([a-zA-Z0-9_\-\.]+)$/.exec(circuitId);
+    const hashMatch = /^([a-fA-F0-9]+)$/.exec(publicInputHash);
+    if (!cidMatch || !hashMatch) {
+      throw new Error('API Client: invalid circuitId or publicInputHash format');
+    }
+    return signedFetch(this.cfg, 'GET', `/v1/proofs/status/${cidMatch[1]}/${hashMatch[1]}`);
   }
 
   async auditLogs(limit = 50): Promise<unknown> {
