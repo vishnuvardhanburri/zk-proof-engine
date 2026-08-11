@@ -50,29 +50,29 @@ jobs:
             zk-proof-engine-release.tar.gz
             sbom.json
 
-  provenance:
-    needs: [build]
-    permissions:
-      actions: read
-      id-token: write
-      contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
-    with:
-      base64-subjects: "${{ needs.build.outputs.hashes }}"
-      upload-assets: true
-      private-repository: true
 
   release:
-    needs: [build, provenance]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
+      attestations: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Download artifacts
         uses: actions/download-artifact@65a9edc5881422a27040fac92f1f232a53d828da # v4.1.7
         with:
           name: release-artifacts
+
+      - name: Generate SLSA Build Provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            zk-proof-engine-release.tar.gz
+            sbom.json
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0

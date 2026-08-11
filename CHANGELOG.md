@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.2] — 2026-08-11 — Migration to Native GitHub Artifact Attestations
+
+### Security
+- Replaced the deprecated `slsa-github-generator` workflow with native `actions/attest-build-provenance` to generate SLSA Level 3 provenance attestations without the private-repository unquoted-interpolation bug. Retained Cosign blob signing for backward compatibility and Scorecard Signed Releases verification.
+
 ## [0.9.1] — 2026-08-11 — SLSA Provenance Privacy Fix
 
 ### Fixed
