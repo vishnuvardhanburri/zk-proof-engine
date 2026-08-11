@@ -73,7 +73,7 @@ jobs:
 
       - name: Install slither & solc-select
         run: |
-          pip install --require-hashes -r .github/requirements.txt
+          pip install --require-hashes -r ../.github/requirements.txt
           solc-select install 0.8.27
           solc-select use 0.8.27
           echo "$HOME/.solc-select" >> "$GITHUB_PATH"
