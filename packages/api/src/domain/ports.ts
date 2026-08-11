@@ -56,7 +56,8 @@ export interface IdempotencyStorePort {
 
 export interface AuditSinkPort {
   append(event: AuditEvent): Promise<void>;
-  recent(limit: number, action?: AuditAction): Promise<AuditEvent[]>;
+  /** Returns events in reverse chronological order, optionally filtered by action and/or tenantId. */
+  recent(limit: number, action?: AuditAction, tenantId?: string): Promise<AuditEvent[]>;
 }
 
 export interface MetricsSinkPort {

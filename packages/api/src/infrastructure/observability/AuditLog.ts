@@ -37,8 +37,10 @@ export class AuditLog implements AuditSinkPort {
     }
   }
 
-  async recent(limit: number, action?: AuditAction): Promise<AuditEvent[]> {
-    const list = action ? this.ring.filter((e) => e.action === action) : this.ring;
+  async recent(limit: number, action?: AuditAction, tenantId?: string): Promise<AuditEvent[]> {
+    let list = action ? this.ring.filter((e) => e.action === action) : this.ring;
+    // Tenant isolation: when tenantId is provided, filter to that tenant's events only.
+    if (tenantId !== undefined) list = list.filter((e) => e.tenantId === tenantId);
     return list.slice(-Math.max(1, Math.min(limit, 1000))).reverse();
   }
 
