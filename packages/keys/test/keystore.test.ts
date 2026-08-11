@@ -66,7 +66,7 @@ describe('FileKeyStore', () => {
 
   it('rejects a tampered keyring file', async () => {
     const path = join(await tempDir(), 'tampered.json');
-    await writeFile(path, '{\"version\":1,\"entries\":[{broken}', { mode: 0o600 });
+    await writeFile(path, '{"version":1,"entries":[{broken}', { mode: 0o600 });
     const store = new FileKeyStore(path);
     await expect(store.load()).rejects.toThrow(KeyStoreError);
   });
