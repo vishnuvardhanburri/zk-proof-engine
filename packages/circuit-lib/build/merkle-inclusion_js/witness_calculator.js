@@ -63,8 +63,7 @@ module.exports = async function builder(code, options) {
         }
     });
 
-    const sanityCheck =
-        options
+    const sanityCheck = options;
 //        options &&
 //        (
 //            options.sanityCheck ||
@@ -149,7 +148,7 @@ class WitnessCalculator {
 		throw new Error(`Too many values for input signal ${k}\n`);
 	    }
             for (let i=0; i<fArr.length; i++) {
-                const arrFr = toArray32(normalize(fArr[i],this.prime),this.n32)
+                const arrFr = toArray32(normalize(fArr[i],this.prime),this.n32);
                 for (let j=0; j<this.n32; j++) {
 		    this.instance.exports.writeSharedRWMemory(j,arrFr[this.n32-1-j]);
 		}

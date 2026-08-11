@@ -207,9 +207,6 @@ export function buildDashboardServer(deps: DashboardDeps): FastifyInstance {
   return app;
 }
 
-function isPublic(url: string): boolean {
-  return url === '/api/health' || url === '/api/auth/login' || url === '/api/auth/logout';
-}
 
 function apiUnconfigured(reply: FastifyReply) {
   return reply.code(503).send({ code: 'api_unconfigured', detail: 'API credentials not configured' });

@@ -10,10 +10,10 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+
 import { performance } from 'node:perf_hooks';
 import { buildPoseidonReference } from 'circomlibjs';
-import { buildDir, getCircuitDefinition } from '@zkpe/circuit-lib';
+import { buildDir } from '@zkpe/circuit-lib';
 import { Circuit, prove, verify } from '@zkpe/engine';
 
 const BUDGETS_MS = {
