@@ -52,6 +52,12 @@ export const configSchema = z.object({
   rateVerifyRefillPerMinute: z.coerce.number().int().min(1).default(4),
   maxPayloadBytes: z.coerce.number().int().min(1024).max(1_048_576).default(65_536),
   idempotencyTtlMs: z.coerce.number().int().min(1000).default(86_400_000),
+  /**
+   * Maximum number of concurrent snarkjs verify/prove calls.
+   * Prevents CPU exhaustion under burst load (§6 resource-exhaustion).
+   * Default: 8 (matches rateVerifyCapacity).
+   */
+  maxConcurrentVerify: z.coerce.number().int().min(1).max(256).default(8),
   otelEndpoint: z.string().optional(),
   otelDisabled: z.coerce.boolean().default(false),
   otelSamplerRatio: z.coerce.number().min(0).max(1).default(1),
@@ -84,6 +90,7 @@ export function parseConfig(env: NodeJS.ProcessEnv): Config {
     rateVerifyRefillPerMinute: env.ZK_RATE_VERIFY_REFILL_PER_MINUTE,
     maxPayloadBytes: env.ZK_MAX_PAYLOAD_BYTES,
     idempotencyTtlMs: env.ZK_IDEMPOTENCY_TTL_MS,
+    maxConcurrentVerify: env.ZK_MAX_CONCURRENT_VERIFY,
     otelEndpoint: env.ZK_OTEL_ENDPOINT,
     otelDisabled: env.ZK_OTEL_DISABLED,
     otelSamplerRatio: env.ZK_OTEL_SAMPLER_RATIO,

@@ -30,7 +30,7 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv): Promise<void
   const audit = new AuditLog(config.auditFile ? { filePath: config.auditFile } : {});
   const metrics = new Metrics();
 
-  const engine = new EngineAdapter(tracer);
+  const engine = new EngineAdapter(tracer, metrics, config.maxConcurrentVerify);
   const registry = config.registryRpc
     ? new RegistryAdapter(
         {

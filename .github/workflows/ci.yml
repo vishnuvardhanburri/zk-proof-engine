@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -35,13 +35,18 @@ jobs:
         run: npm run build
       - name: Restore dev PTau from cache
         id: ptau-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/circuit-lib/build/ptau16_dev.ptau
           key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
-          save-always: true
       - name: Generate dev PTau (deterministic, skip-if-fresh)
         run: npm run build:ptau -w @zkpe/circuit-lib
+      - name: Save dev PTau to cache
+        if: steps.ptau-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: packages/circuit-lib/build/ptau16_dev.ptau
+          key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
       - name: Lint
         run: npm run lint
       - name: Typecheck
@@ -58,10 +63,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -71,13 +76,18 @@ jobs:
         run: npm run build
       - name: Restore dev PTau from cache
         id: ptau-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/circuit-lib/build/ptau16_dev.ptau
           key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
-          save-always: true
       - name: Generate dev PTau (deterministic, skip-if-fresh)
         run: npm run build:ptau -w @zkpe/circuit-lib
+      - name: Save dev PTau to cache
+        if: steps.ptau-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: packages/circuit-lib/build/ptau16_dev.ptau
+          key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
       - name: CLI smoke (fresh install)
         shell: bash
         run: npm run fresh-install --workspace @zkpe/cli
@@ -89,10 +99,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -105,15 +115,21 @@ jobs:
         run: npm run build
       - name: Restore dev PTau from cache
         id: ptau-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/circuit-lib/build/ptau16_dev.ptau
           key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
-          save-always: true
       - name: Generate dev PTau (deterministic, skip-if-fresh)
         run: npm run build:ptau -w @zkpe/circuit-lib
+      - name: Save dev PTau to cache
+        if: steps.ptau-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: packages/circuit-lib/build/ptau16_dev.ptau
+          key: ptau-dev-${{ hashFiles('packages/circuit-lib/scripts/build-ptau.mjs', 'packages/circuit-lib/package.json') }}
       - name: Full journey e2e
         env:
+          # Anvil default dev key #0 — public well-known test key, NOT a secret
           ZK_REGISTRY_PK: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
         run: npm run e2e --workspace @zkpe/cli
 
@@ -122,10 +138,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm

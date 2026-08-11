@@ -11,10 +11,19 @@ import { artifactsExist, getCircuitDefinition, listCircuitIds } from '@zkpe/circ
 import type { Groth16Proof } from '@zkpe/proof-format';
 import type { CircuitInfo, VerifyOutcome } from '../../domain/entities.js';
 import { DomainError } from '../../domain/errors.js';
-import type { EnginePort, TracerPort } from '../../domain/ports.js';
+import type { EnginePort, MetricsSinkPort, TracerPort } from '../../domain/ports.js';
+import { Semaphore } from '../util/Semaphore.js';
 
 export class EngineAdapter implements EnginePort {
-  constructor(private readonly tracer: TracerPort) {}
+  private readonly sem: Semaphore;
+
+  constructor(
+    private readonly tracer: TracerPort,
+    private readonly metrics?: MetricsSinkPort,
+    maxConcurrent = 8,
+  ) {
+    this.sem = new Semaphore(maxConcurrent);
+  }
 
   async listCircuits(): Promise<CircuitInfo[]> {
     return listCircuitIds().map((id) => {
@@ -31,9 +40,14 @@ export class EngineAdapter implements EnginePort {
 
   async verify(circuitId: string, publicInputs: string[], proof: Groth16Proof): Promise<VerifyOutcome> {
     const span = this.tracer.startSpan('engine.verify', { circuitId });
+    // Bound concurrent snarkjs verify calls to prevent CPU exhaustion (§6)
+    this.metrics?.gauge('engine_verify_inflight', this.sem.inflight);
+    this.metrics?.gauge('engine_verify_queued', this.sem.queued);
     try {
-      const circuit = await Circuit.load(circuitId);
-      const result = await engineVerify(circuit, publicInputs, proof);
+      const result = await this.sem.run(async () => {
+        const circuit = await Circuit.load(circuitId);
+        return engineVerify(circuit, publicInputs, proof);
+      });
       span.setAttributes({ valid: result.valid });
       if (result.valid) span.ok('verified');
       else span.fail('verification rejected');
