@@ -172,7 +172,7 @@ export class ApiClient {
 
   async proofStatus(circuitId: string, publicInputHash: string): Promise<unknown> {
     const cidMatch = /^([a-zA-Z0-9_\-.]+)$/.exec(circuitId);
-    const hashMatch = /^([a-fA-F0-9]+)$/.exec(publicInputHash);
+    const hashMatch = /^(0x[a-fA-F0-9]+|[a-fA-F0-9]+)$/.exec(publicInputHash);
     if (!cidMatch || !hashMatch) {
       throw new Error('API Client: invalid circuitId or publicInputHash format');
     }
