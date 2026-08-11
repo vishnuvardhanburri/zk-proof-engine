@@ -43,14 +43,17 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Checkout PR head (read-only, for the envelope only)
+      - name: Download PR envelope (read-only)
         if: ${{ github.event_name == 'pull_request_target' }}
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: ${{ runner.temp }}/zk-pr-head
-          persist-credentials: false
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "${{ runner.temp }}/zk-pr-head/$(dirname "$ZK_GATE_ENVELOPE")"
+          gh api -H "Accept: application/vnd.github.v3.raw" \
+            "/repos/$HEAD_REPO/contents/$ZK_GATE_ENVELOPE?ref=$HEAD_SHA" \
+            > "${{ runner.temp }}/zk-pr-head/$ZK_GATE_ENVELOPE" || echo "No envelope found in PR"
 
       - name: Build trusted gate code
         run: |
