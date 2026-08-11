@@ -74,13 +74,14 @@ export function readDevPtauChecksum(): string {
  */
 export async function loadArtifactHashes(def: CircuitDefinition): Promise<ArtifactHashes> {
   const paths = artifactPaths(def);
-  const vk = JSON.parse(readFileSync(paths.vk, 'utf8')) as Record<string, unknown>;
-  const [r1cs, wasm, zkey, vkSha256] = await Promise.all([
+  const vkRaw = readFileSync(paths.vk, 'utf8');
+  const vk = JSON.parse(vkRaw) as Record<string, unknown>;
+  const [r1cs, wasm, zkey] = await Promise.all([
     sha256File(paths.r1cs),
     sha256File(paths.wasm),
     sha256File(paths.zkey),
-    sha256File(paths.vk),
   ]);
+  const vkSha256 = sha256Utf8(vkRaw.replace(/\r\n/g, '\n'));
   return { r1cs, wasm, zkey, vkHash: computeVkHash(vk), vkSha256 };
 }
 
