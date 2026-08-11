@@ -34,7 +34,9 @@ describe('ProfileStore', () => {
     ).rejects.toThrow(/already exists/);
   });
 
-  it('refuses file with group/other permissions (0600 enforcement)', async () => {
+  // Windows NTFS does not enforce POSIX permission bits — skip on Windows
+  const itUnix = process.platform === 'win32' ? it.skip : it;
+  itUnix('refuses file with group/other permissions (0600 enforcement)', async () => {
     const p = join(dir, 'dev.json');
     await writeFile(p, JSON.stringify({ apiUrl: 'http://a', clientId: 'c', secret: SECRET }), { mode: 0o644 });
     await store.load('dev').catch(() => {});
@@ -53,7 +55,8 @@ describe('ProfileStore', () => {
     expect(JSON.stringify(redacted)).not.toContain(SECRET);
   });
 
-  it('file mode is 0600 after create', async () => {
+  // Windows NTFS does not honour chmod 0600 — skip on Windows
+  itUnix('file mode is 0600 after create', async () => {
     await store.save('dev', { apiUrl: 'http://a', clientId: 'c', secret: SECRET }, { create: true });
     const { stat } = await import('node:fs/promises');
     const st = await stat(join(dir, 'dev.json'));
