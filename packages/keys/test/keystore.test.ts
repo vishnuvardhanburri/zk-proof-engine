@@ -1,6 +1,10 @@
 /**
  * Tests for the file keystore (`src/keystore.ts`, ADR-0009): 0600
  * permissions, atomic persistence, and tamper detection.
+ *
+ * Permission-mode assertions are skipped on Windows: POSIX chmod bits are
+ * not enforced by the Windows kernel, so `stat.mode` does not reflect
+ * them. Security on Windows depends on NTFS ACLs instead.
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -11,6 +15,8 @@ import { join } from 'node:path';
 import { FileKeyStore } from '../src/keystore.js';
 import { KeyRing } from '../src/keyring.js';
 import { KeyStoreError } from '../src/errors.js';
+
+const IS_WINDOWS = process.platform === 'win32';
 
 let dir: string;
 
@@ -31,8 +37,11 @@ describe('FileKeyStore', () => {
     ring.rotate();
     await store.save(ring);
 
-    const st = statSync(store.path);
-    expect(st.mode & 0o077).toBe(0);
+    // POSIX permission bits are not enforced on Windows; skip the mode check.
+    if (!IS_WINDOWS) {
+      const st = statSync(store.path);
+      expect(st.mode & 0o077).toBe(0);
+    }
 
     const loaded = await store.load();
     expect(loaded.list()).toEqual(ring.list());
@@ -46,6 +55,8 @@ describe('FileKeyStore', () => {
   });
 
   it('rejects a keyring file with unsafe permissions', async () => {
+    // Windows does not enforce POSIX permission bits — skip.
+    if (IS_WINDOWS) return;
     const path = join(await tempDir(), 'leaky.json');
     await writeFile(path, JSON.stringify(KeyRing.create().toJSON()), { mode: 0o644 });
     const store = new FileKeyStore(path);
@@ -55,12 +66,14 @@ describe('FileKeyStore', () => {
 
   it('rejects a tampered keyring file', async () => {
     const path = join(await tempDir(), 'tampered.json');
-    await writeFile(path, '{"version":1,"entries":[{broken}', { mode: 0o600 });
+    await writeFile(path, '{\"version\":1,\"entries\":[{broken}', { mode: 0o600 });
     const store = new FileKeyStore(path);
     await expect(store.load()).rejects.toThrow(KeyStoreError);
   });
 
   it('chmods an existing insecure file on save', async () => {
+    // POSIX-only: Windows cannot enforce mode bits.
+    if (IS_WINDOWS) return;
     const path = join(await tempDir(), 'fixme.json');
     await writeFile(path, '{}', { mode: 0o644 });
     const store = new FileKeyStore(path);
