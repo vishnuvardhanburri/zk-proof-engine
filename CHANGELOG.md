@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.0] — 2026-08-11 — SLSA Provenance & Signed Releases Fix
+
+### Fixed
+- Fixed `actions/setup-node` SHA in release workflow which caused the `v0.8.3` release action to fail. First fully successful signed SLSA provenance release.
+
 ## [0.8.3] — 2026-08-11 — Security & Release Assurance
 
 ### Security
