@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.3] — 2026-08-11 — Single-Job Release Workflow
+
+### Fixed
+- Consolidated the release workflow into a single `release` job to avoid artifact passing overhead and bypass an invalid SHA reference in the `actions/download-artifact` step.
+
 ## [0.9.2] — 2026-08-11 — Migration to Native GitHub Artifact Attestations
 
 ### Security
