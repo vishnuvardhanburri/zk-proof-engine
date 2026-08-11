@@ -175,6 +175,23 @@ Detailed architectural specs, security reviews, and ADRs are available in [`docs
   - [ADR-0011: Backend API Request Signing](docs/adr/0011-backend-api-request-signing.md)
   - [ADR-0012: Gatekeeper Trust & Artifact Binding](docs/adr/0012-gatekeeper-trust-and-artifact-binding.md)
 
+### Dependency Management
+The project utilizes `npm ci` with strict `package-lock.json` locking to guarantee reproducible environment builds. For smart contract dependencies (e.g., Slither), we utilize Python `pip-tools` with cryptographically hashed requirements (`.github/requirements.txt`) to prevent dependency substitution attacks.
+
+### Release Process & Provenance Verification
+1. **Trigger**: Releases are initiated by pushing a SemVer tag (e.g., `v1.0.0`).
+2. **SLSA Provenance**: Our CI pipeline integrates `slsa-github-generator` (Level 3) to generate an unforgeable cryptographic attestation of the build process.
+3. **SBOM**: A comprehensive CycloneDX Software Bill of Materials (`sbom.json`) is generated for every release.
+4. **Sigstore/Cosign**: Release artifacts (`zk-proof-engine-release.tar.gz` and `sbom.json`) are cryptographically signed using keyless OIDC signing via Cosign. 
+
+To independently verify a release:
+```bash
+# Verify the artifact signature using Cosign
+cosign verify-blob --certificate-identity-regexp "https://github.com/vishnuvardhanburri/zk-proof-engine" --certificate-oidc-issuer "https://token.actions.githubusercontent.com" --signature release.sig zk-proof-engine-release.tar.gz
+```
+
+For more detailed security procedures, supported versions, and vulnerability reporting, please see [SECURITY.md](SECURITY.md).
+
 ---
 
 ## 👤 Maintainer
@@ -186,4 +203,4 @@ GitHub: [@vishnuvardhanburri](https://github.com/vishnuvardhanburri)
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is dual-licensed under MIT and Apache 2.0. See [LICENSE](LICENSE) for details.
