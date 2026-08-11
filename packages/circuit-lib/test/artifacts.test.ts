@@ -29,11 +29,11 @@ describe('CIRCUIT_DEFS registry', () => {
 
 describe('artifact paths', () => {
   it('resolves the build dir under the package root', () => {
-    expect(buildDir()).toMatch(/packages\/circuit-lib\/build$/);
+    expect(buildDir().replace(/\\/g, '/')).toMatch(/packages\/circuit-lib\/build$/);
   });
 
   it('points at the canonical artifact file names', () => {
     const def = getCircuitDefinition('poseidon-preimage');
-    expect(manifestPath(def)).toMatch(/poseidon-preimage\.manifest\.json$/);
+    expect(manifestPath(def).replace(/\\/g, '/')).toMatch(/poseidon-preimage\.manifest\.json$/);
   });
 });
