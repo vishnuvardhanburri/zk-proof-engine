@@ -48,7 +48,7 @@ export function normalizeSubmission(submission: unknown): unknown {
   
   const safeStr = (v: unknown) => {
     const str = String(v);
-    const match = /^([a-zA-Z0-9_\-\.]+)$/.exec(str);
+    const match = /^([a-zA-Z0-9_\-.]+)$/.exec(str);
     if (!match) throw new Error('Invalid format');
     return match[1]!;
   };
@@ -146,7 +146,7 @@ export class ApiClient {
   readonly cfg: ApiClientConfig;
 
   constructor(cfg: ApiClientConfig) {
-    const match = /^(https?:\/\/[a-zA-Z0-9\-\.\:]+(?:\/[a-zA-Z0-9\-\.\/]+)?)/.exec(cfg.baseUrl);
+    const match = /^(https?:\/\/[a-zA-Z0-9\-.:]+(?:\/[a-zA-Z0-9\-./]+)?)/.exec(cfg.baseUrl);
     if (!match) throw new Error('API Client: invalid base URL format');
     this.cfg = { ...cfg, baseUrl: match[1]! };
   }
@@ -171,7 +171,7 @@ export class ApiClient {
   }
 
   async proofStatus(circuitId: string, publicInputHash: string): Promise<unknown> {
-    const cidMatch = /^([a-zA-Z0-9_\-\.]+)$/.exec(circuitId);
+    const cidMatch = /^([a-zA-Z0-9_\-.]+)$/.exec(circuitId);
     const hashMatch = /^([a-fA-F0-9]+)$/.exec(publicInputHash);
     if (!cidMatch || !hashMatch) {
       throw new Error('API Client: invalid circuitId or publicInputHash format');
