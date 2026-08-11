@@ -83,7 +83,8 @@ if (import.meta.url === new URL(`file://${process.argv[1]}`, 'file:').href) {
 }
 
 export { traceContextFromHeaders };
-export { signedFetch, ApiClient, ApiClientError, type ApiClientConfig, type ApiErrorDetail } from './client.js';export { buildServer, type ServerDeps } from './api/buildServer.js';
+export { ApiClient, ApiClientError, type ApiClientConfig, type ApiErrorDetail } from './client.js';
+export { buildServer, type ServerDeps } from './api/buildServer.js';
 export { parseConfig, ConfigError } from './config.js';
 export { NoopTracer } from './telemetry/telemetry.js';
 export { EnvSecretStore } from './infrastructure/auth/EnvSecretStore.js';

@@ -53,7 +53,7 @@ export function normalizeSubmission(submission: unknown): unknown {
   };
   const safeArr = (arr: unknown) => Array.isArray(arr) ? Array.from(arr).map(safeStr) : [];
 
-  let proof: unknown = s.proof;
+  let proof: unknown = undefined;
   if (s.proof && typeof s.proof === 'object') {
     const p = s.proof as Record<string, unknown>;
     if (Array.isArray(p.pi_a) && Array.isArray(p.pi_b) && Array.isArray(p.pi_c)) {
