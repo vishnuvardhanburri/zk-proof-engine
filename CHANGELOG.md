@@ -1,35 +1,10 @@
 # Changelog
 
-## [0.9.4] — 2026-08-11 — Fix Scorecard Provenance Missing
-
-### Security
-- Export SLSA build provenance as `provenance.intoto.jsonl` in the GitHub release artifacts so OpenSSF Scorecard can accurately detect and parse the native attestations.
-
-## [0.9.3] — 2026-08-11 — Single-Job Release Workflow
-
-### Fixed
-- Consolidated the release workflow into a single `release` job to avoid artifact passing overhead and bypass an invalid SHA reference in the `actions/download-artifact` step.
-
-## [0.9.2] — 2026-08-11 — Migration to Native GitHub Artifact Attestations
-
-### Security
-- Replaced the deprecated `slsa-github-generator` workflow with native `actions/attest-build-provenance` to generate SLSA Level 3 provenance attestations without the private-repository unquoted-interpolation bug. Retained Cosign blob signing for backward compatibility and Scorecard Signed Releases verification.
-
-## [0.9.1] — 2026-08-11 — SLSA Provenance Privacy Fix
-
-### Fixed
-- Added `private-repository: true` to the SLSA generator workflow to bypass the exit code 27 transparency log exposure block.
-
-## [0.9.0] — 2026-08-11 — SLSA Provenance & Signed Releases Fix
-
-### Fixed
-- Fixed `actions/setup-node` SHA in release workflow which caused the `v0.8.3` release action to fail. First fully successful signed SLSA provenance release.
-
-## [0.8.3] — 2026-08-11 — Security & Release Assurance
+## [0.1.0] — 2026-08-11 — Security & Release Assurance (Final Base)
 
 ### Security
 - **OpenSSF Best Practices**: Upgraded security controls to align with OpenSSF Best Practices baseline (Branch protection, dependency locking, CodeQL scanning).
-- **Release Assurance**: Modernized CI runtime environment (`node22`) in the release workflow. Integrated Sigstore/Cosign keyless OIDC signing and SLSA Level 3 Provenance for cryptographically verifiable artifacts.
+- **Release Assurance**: Modernized CI runtime environment (`node22`) in the release workflow. Integrated native GitHub Artifact Attestations (SLSA L3 Provenance) and Sigstore/Cosign keyless OIDC signing for cryptographically verifiable artifacts.
 - **Documentation**: Cleared up license assertions (strictly MIT) and added explicit release verification commands and versioning matrices to `SECURITY.md`.
 ## [0.8.2] — 2026-08-09 — Fresh-checkout CI green (release-blocking CI fixes)
 
