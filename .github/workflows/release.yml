@@ -60,6 +60,7 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true
+      private-repository: true
 
   release:
     needs: [build, provenance]

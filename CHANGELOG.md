@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.1] — 2026-08-11 — SLSA Provenance Privacy Fix
+
+### Fixed
+- Added `private-repository: true` to the SLSA generator workflow to bypass the exit code 27 transparency log exposure block.
+
 ## [0.9.0] — 2026-08-11 — SLSA Provenance & Signed Releases Fix
 
 ### Fixed
