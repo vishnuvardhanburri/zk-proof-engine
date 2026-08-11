@@ -37,7 +37,7 @@
     "@zkpe/circuit-lib": "0.2.0",
     "@zkpe/engine": "0.2.0",
     "@zkpe/proof-format": "0.2.0",
-    "ethers": "^5.8.0",
+    "ethers": "^6.17.0",
     "fastify": "^5.11.3",
     "zod": "^4.4.3",
     "zod-to-json-schema": "^3.25.2"
