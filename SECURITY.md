@@ -15,7 +15,7 @@ Only the latest release tag and the active `main` branch receive security update
 | Version / Ref | Supported          | Security Scope |
 | :--- | :--- | :--- |
 | `main` | :white_check_mark: Yes | All components (Circuits, Engine, Contracts, API, CLI, Gatekeeper) |
-| Latest tag (e.g. `v0.8.x`) | :white_check_mark: Yes | Core cryptographic engine, registry contracts, & proof formats |
+| Latest tag (e.g. project `v0.8.x`, packages `v0.2.x`) | :white_check_mark: Yes | Core cryptographic engine, registry contracts, & proof formats |
 | Older commits / tags | :x: No | Unsupported |
 
 ---

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.3] — 2026-08-11 — Security & Release Assurance
+
+### Security
+- **OpenSSF Best Practices**: Upgraded security controls to align with OpenSSF Best Practices baseline (Branch protection, dependency locking, CodeQL scanning).
+- **Release Assurance**: Modernized CI runtime environment (`node22`) in the release workflow. Integrated Sigstore/Cosign keyless OIDC signing and SLSA Level 3 Provenance for cryptographically verifiable artifacts.
+- **Documentation**: Cleared up license assertions (strictly MIT) and added explicit release verification commands and versioning matrices to `SECURITY.md`.
 ## [0.8.2] — 2026-08-09 — Fresh-checkout CI green (release-blocking CI fixes)
 
 The 0.8.0 push was the repo's first CI run; beyond the secret-scan range bug
