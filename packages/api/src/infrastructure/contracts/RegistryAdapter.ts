@@ -57,7 +57,6 @@ interface AnyContract {
 function call(c: AnyContract, method: string, ...args: any[]): Promise<any> {
   const fn = c[method];
   if (typeof fn !== 'function') throw new Error(`Contract method ${method} not found`);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
   return fn(...args) as Promise<unknown>;
 }
 
