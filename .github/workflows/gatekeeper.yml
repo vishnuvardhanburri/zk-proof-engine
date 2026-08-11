@@ -12,8 +12,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 concurrency:
   group: gatekeeper-${{ github.ref }}
@@ -34,6 +32,10 @@ jobs:
     name: zk-verify gate (signed proof + artifact binding + on-chain)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout trusted base ref
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
