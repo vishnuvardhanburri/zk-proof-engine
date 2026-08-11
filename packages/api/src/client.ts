@@ -142,7 +142,13 @@ export async function signedFetch(
 }
 
 export class ApiClient {
-  constructor(readonly cfg: ApiClientConfig) {}
+  readonly cfg: ApiClientConfig;
+
+  constructor(cfg: ApiClientConfig) {
+    const match = /^(https?:\/\/[a-zA-Z0-9\-\.\:]+(?:\/[a-zA-Z0-9\-\.\/]+)?)/.exec(cfg.baseUrl);
+    if (!match) throw new Error('API Client: invalid base URL format');
+    this.cfg = { ...cfg, baseUrl: match[1]! };
+  }
 
   async listCircuits(): Promise<unknown> {
     return signedFetch(this.cfg, 'GET', '/v1/circuits');
