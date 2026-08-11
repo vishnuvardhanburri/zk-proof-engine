@@ -52,3 +52,14 @@ To help us assess and resolve issues quickly, please include the following detai
 3. **Severity & Impact Assessment**: Description of potential impact (e.g., proof forgery, constraint under-specification, contract drain, state corruption, or bypass of CI Gatekeeper).
 4. **Attack Scenario**: Step-by-step description of how an attacker could exploit the vulnerability.
 5. **Reproduction Vector**: Minimal reproducible example (proof vector, input JSON, or unit test snippet).
+
+---
+
+## Trust Model & Scorecard Limitations
+
+This project is maintained by a single owner (`@vishnuvardhanburri`). As a result, certain enterprise-level GitHub features evaluated by OpenSSF Scorecard are intrinsically limited:
+
+- **Code-Review:** Pull Request approvals are required for merging to `main`, but as a sole maintainer, "two-party" review is organically unachievable without artificial contributors. We do not manufacture fake reviewers to bypass this.
+- **Maintained:** The repository is actively maintained but may occasionally flag as "unmaintained" in Scorecard until the project surpasses the 90-day creation threshold.
+- **Fuzzing:** Foundry-based invariant and property fuzzing are actively utilized for cryptographic correctness but are currently undetected by Scorecard's ClusterFuzzLite integrations.
+- **Code Scanning Findings (GHSA-8988-4f7v-96qf, CVE-2026-54285, GHSA-qpx9-hpmf-5gmw, GHSA-848j-6mx2-7j84, GHSA-58qx-3vcg-4xpx, GHSA-96hv-2xvq-fx4p):** We formally accept the risk for these transitive vulnerabilities (`ethers@5.x`, `snarkjs`, `@opentelemetry/core@1.x`). Upgrading them introduces immediate breaking API and cryptographic protocol changes.

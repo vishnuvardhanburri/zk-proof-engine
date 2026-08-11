@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
+      - name: Setup Node
+        uses: actions/setup-node@60edb5dd545a775178f525247833159c03af0b59 # v4.0.2
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Generate SBOM
+        run: |
+          npx @cyclonedx/cyclonedx-npm --output-format json --output-file sbom.json
+
+      - name: Archive artifacts
+        run: |
+          tar -czf zk-proof-engine-release.tar.gz packages sbom.json
+      
+      - name: Generate artifact hashes
+        id: hash
+        run: |
+          echo "hashes=$(sha256sum zk-proof-engine-release.tar.gz sbom.json | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts for release
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: release-artifacts
+          path: |
+            zk-proof-engine-release.tar.gz
+            sbom.json
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true
+
+  release:
+    needs: [build, provenance]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@65a9edc5881422a27040fac92f1f232a53d828da # v4.1.7
+        with:
+          name: release-artifacts
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
+
+      - name: Sign artifacts
+        run: |
+          cosign sign-blob --yes zk-proof-engine-release.tar.gz > release.sig
+          cosign sign-blob --yes sbom.json > sbom.sig
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        with:
+          files: |
+            zk-proof-engine-release.tar.gz
+            sbom.json
+            release.sig
+            sbom.sig
+          generate_release_notes: true
