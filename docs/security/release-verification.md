@@ -10,7 +10,7 @@ To verify the signature, install [Cosign](https://docs.sigstore.dev/cosign/insta
 
 ```bash
 cosign verify-blob \
-  --certificate-identity-regexp "https://github.com/vishnuvardhanburri/zk-proof-engine" \
+  --certificate-identity-regexp "^https://github\.com/vishnuvardhanburri/zk-proof-engine/\.github/workflows/release\.yml@refs/tags/v.*$" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   --signature release.sig \
   zk-proof-engine-release.tar.gz
@@ -22,7 +22,7 @@ The release contains `sbom.json` which has a detailed graph of all NPM dependenc
 
 ```bash
 cosign verify-blob \
-  --certificate-identity-regexp "https://github.com/vishnuvardhanburri/zk-proof-engine" \
+  --certificate-identity-regexp "^https://github\.com/vishnuvardhanburri/zk-proof-engine/\.github/workflows/release\.yml@refs/tags/v.*$" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   --signature sbom.sig \
   sbom.json
@@ -30,7 +30,7 @@ cosign verify-blob \
 
 ## 3. Verifying SLSA Provenance
 
-The build process generates a cryptographically unforgeable SLSA Level 3 attestation using `slsa-github-generator`. This ensures that the build environment (`ubuntu-latest` on GitHub Actions) was completely isolated and that the artifact traces back directly to the source code without tampering.
+The build process generates a cryptographically unforgeable SLSA Level 3 attestation using `slsa-github-generator`. This ensures that the build environment (`ubuntu-latest` on GitHub Actions) was completely isolated and that the artifact traces back directly to the source commit without tampering.
 
 To verify the provenance, download the `.intoto.jsonl` attestation file and use the official [slsa-verifier](https://github.com/slsa-framework/slsa-verifier):
 

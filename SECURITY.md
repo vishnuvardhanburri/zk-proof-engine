@@ -15,7 +15,7 @@ Only the latest release tag and the active `main` branch receive security update
 | Version / Ref | Supported          | Security Scope |
 | :--- | :--- | :--- |
 | `main` | :white_check_mark: Yes | All components (Circuits, Engine, Contracts, API, CLI, Gatekeeper) |
-| Latest tag (`v0.8.x` / `v1.0.0`) | :white_check_mark: Yes | Core cryptographic engine, registry contracts, & proof formats |
+| Latest tag (e.g. `v0.8.x`) | :white_check_mark: Yes | Core cryptographic engine, registry contracts, & proof formats |
 | Older commits / tags | :x: No | Unsupported |
 
 ---
@@ -62,4 +62,19 @@ This project is maintained by a single owner (`@vishnuvardhanburri`). As a resul
 - **Code-Review:** Pull Request approvals are required for merging to `main`, but as a sole maintainer, "two-party" review is organically unachievable without artificial contributors. We do not manufacture fake reviewers to bypass this.
 - **Maintained:** The repository is actively maintained but may occasionally flag as "unmaintained" in Scorecard until the project surpasses the 90-day creation threshold.
 - **Fuzzing:** Foundry-based invariant and property fuzzing are actively utilized for cryptographic correctness but are currently undetected by Scorecard's ClusterFuzzLite integrations.
-- **Code Scanning Findings (GHSA-8988-4f7v-96qf, CVE-2026-54285, GHSA-qpx9-hpmf-5gmw, GHSA-848j-6mx2-7j84, GHSA-58qx-3vcg-4xpx, GHSA-96hv-2xvq-fx4p):** We formally accept the risk for these transitive vulnerabilities (`ethers@5.x`, `snarkjs`, `@opentelemetry/core@1.x`). Upgrading them introduces immediate breaking API and cryptographic protocol changes.
+- **Code Scanning Findings**: We formally document the following as **ACCEPTED RISK**:
+  - **Dependency**: `ethers`
+  - **Affected Version**: `5.8.0`
+  - **Advisory**: `GHSA-8988-4f7v-96qf`, `CVE-2026-54285`
+  - **Why upgrade is unavailable**: Upgrading to ethers v6 introduces immediate breaking API changes to the Gatekeeper and Registry contracts.
+  - **Actual Exposure**: None. `ethers` is used locally for deployment scripts and test execution, not within the runtime API or verifier execution context.
+  - **Mitigation**: Scoped only to development dependencies.
+  - **Review Condition**: Will reassess when migrating to ethers v6 in the `v1.0.0` roadmap.
+
+  - **Dependency**: `snarkjs`, `@opentelemetry/core`
+  - **Affected Version**: `0.7.6`, `1.x`
+  - **Advisory**: `GHSA-qpx9-hpmf-5gmw`, `GHSA-848j-6mx2-7j84`, `GHSA-58qx-3vcg-4xpx`, `GHSA-96hv-2xvq-fx4p`
+  - **Why upgrade is unavailable**: Modifying `snarkjs` alters the cryptographic protocol bounds required by the current Circom compilation pipeline.
+  - **Actual Exposure**: None. These are offline proof-generation boundaries or dev-time telemetry bounds.
+  - **Mitigation**: Strictly isolated environment execution for proving.
+  - **Review Condition**: Will reassess upon Groth16 SnarkJS upstream stability release.

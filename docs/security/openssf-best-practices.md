@@ -4,7 +4,7 @@ This document tracks the repository's compliance with the [OpenSSF Best Practice
 
 ## 1. Basics
 - **Project description**: PASS. Covered in `README.md`.
-- **License**: PASS. Dual-licensed under MIT and Apache 2.0 (`LICENSE`).
+- **License**: PASS. Licensed under the MIT License (`LICENSE`).
 - **Registry**: REQUIRES GITHUB UI ACTION. The owner must register the project on the OpenSSF portal.
 - **Documentation**: PASS. Architecture, CLI usage, and security controls are documented.
 

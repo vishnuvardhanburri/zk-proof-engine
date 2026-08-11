@@ -187,7 +187,7 @@ The project utilizes `npm ci` with strict `package-lock.json` locking to guarant
 To independently verify a release:
 ```bash
 # Verify the artifact signature using Cosign
-cosign verify-blob --certificate-identity-regexp "https://github.com/vishnuvardhanburri/zk-proof-engine" --certificate-oidc-issuer "https://token.actions.githubusercontent.com" --signature release.sig zk-proof-engine-release.tar.gz
+cosign verify-blob --certificate-identity-regexp "^https://github\.com/vishnuvardhanburri/zk-proof-engine/\.github/workflows/release\.yml@refs/tags/v.*$" --certificate-oidc-issuer "https://token.actions.githubusercontent.com" --signature release.sig zk-proof-engine-release.tar.gz
 ```
 
 For more detailed security procedures, supported versions, and vulnerability reporting, please see [SECURITY.md](SECURITY.md).
@@ -203,4 +203,4 @@ GitHub: [@vishnuvardhanburri](https://github.com/vishnuvardhanburri)
 
 ## 📄 License
 
-This project is dual-licensed under MIT and Apache 2.0. See [LICENSE](LICENSE) for details.
+This project is licensed under the [MIT License](LICENSE).
