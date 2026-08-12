@@ -485,26 +485,33 @@ Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## OpenSSF Best Practices
 
-This project has achieved the **OpenSSF Best Practices Gold** badge, the highest tier of the [OpenSSF Best Practices program](https://www.bestpractices.dev/).
+This project has achieved the **OpenSSF Best Practices Gold** badge — the highest tier of the [OpenSSF Best Practices program](https://www.bestpractices.dev/), with a **tiered score of 300%** (Passing → Silver → Gold).
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14033/badge)](https://www.bestpractices.dev/en/projects/14033)
 
-**Project ID:** [14033](https://www.bestpractices.dev/en/projects/14033)  
-**Tiered score:** 300% (Gold)  
-**Last achieved:** 2026-08-12
+**Project:** [bestpractices.dev/en/projects/14033](https://www.bestpractices.dev/en/projects/14033)
 
-The Gold badge reflects verified compliance across governance, documentation, security, cryptographic design, testing, CI/CD, and supply-chain integrity criteria.
+### Security Standards Implemented
 
-For the full gap analysis against Gold criteria, including honestly documented unmet criteria such as bus factor and independent audit, see [GOLD-GAP-REPORT.md](GOLD-GAP-REPORT.md).
+| Standard | Implementation |
+| --- | --- |
+| **OpenSSF Best Practices Gold** | Governance, documentation, security, cryptographic design, testing, CI/CD, and supply-chain integrity criteria verified at 300% tiered score |
+| **OpenSSF Scorecard** | Continuous automated scoring on every push to `main` — [`.github/workflows/scorecard.yml`](.github/workflows/scorecard.yml) |
+| **GitHub Security** | Dependabot auto-updates, private vulnerability reporting, CODEOWNERS, branch protection |
+| **CodeQL** | Static analysis on every push and pull request — [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml) |
+| **OSV Scanner** | Dependency vulnerability scanning against the OSV database — [`osv-scanner.toml`](osv-scanner.toml) |
+| **SLSA Build Provenance** | Level 2 provenance on every tagged release via `actions/attest-build-provenance` |
+| **Sigstore / Cosign** | Release artifacts cryptographically signed; verifiable offline via `cosign verify-blob` |
+
+For the full gap analysis against Gold criteria, including honestly documented unmet criteria (bus factor and independent audit), see [GOLD-GAP-REPORT.md](GOLD-GAP-REPORT.md).
 
 <a href="https://www.bestpractices.dev/en/projects/14033">
-  <img src="docs/assets/openssf-gold.png" alt="OpenSSF Best Practices Gold badge — zk-proof-engine project ID 14033, awarded 2026-08-12" width="700">
+  <img src="docs/assets/openssf-gold.png" alt="OpenSSF Best Practices Gold — zk-proof-engine Project ID 14033" width="700">
 </a>
-
-*Screenshot of the official OpenSSF Best Practices project page showing Gold status for `zk-proof-engine` (Project ID 14033).*
 
 ---
 
 ## License
 
 MIT License. See [LICENSE](LICENSE).
+
