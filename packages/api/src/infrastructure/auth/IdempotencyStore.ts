@@ -15,9 +15,13 @@ export class InMemoryIdempotencyStore implements IdempotencyStorePort {
 
   async get(keyHash: string): Promise<IdempotencyRecord | null> {
     const entry = this.entries.get(keyHash);
-    if (!entry) return null;
+    if (!entry) {
+      this.prune();
+      return null;
+    }
     if (entry.expiresAtMs <= this.clockMs()) {
       this.entries.delete(keyHash);
+      this.prune();
       return null;
     }
     return entry.record;

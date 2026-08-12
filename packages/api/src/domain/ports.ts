@@ -46,7 +46,7 @@ export interface SecretStorePort {
 
 export interface NonceStorePort {
   /** True when `nonce` is fresh for `clientId` (and now reserved). */
-  consume(clientId: string, nonce: string, ttlMs: number, nowMs: number): boolean;
+  consume(clientId: string, nonce: string, ttlMs: number, nowMs: number): Promise<boolean>;
 }
 
 export interface IdempotencyStorePort {

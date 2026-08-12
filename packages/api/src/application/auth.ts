@@ -106,7 +106,7 @@ export class Authenticator {
     const provided = signature.toLowerCase();
     if (!safeEqual(expected, provided)) throw new DomainError('AUTH-BAD-SIGNATURE');
 
-    if (!this.nonces.consume(client.clientId, nonce, this.ttlMs, this.clock.nowMs())) {
+    if (!(await this.nonces.consume(client.clientId, nonce, this.ttlMs, this.clock.nowMs()))) {
       throw new DomainError('AUTH-REPLAY');
     }
 

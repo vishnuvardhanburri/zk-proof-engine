@@ -62,6 +62,7 @@ export const configSchema = z.object({
   otelDisabled: z.coerce.boolean().default(false),
   otelSamplerRatio: z.coerce.number().min(0).max(1).default(1),
   logLevel: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  redisUrl: z.string().url().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

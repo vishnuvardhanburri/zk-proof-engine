@@ -13,7 +13,16 @@ When contributing, please follow these security guidelines:
 5. **Testing**: Ensure all new code has accompanying tests. Run `npm test` and `forge test` locally before submitting a PR.
 6. **Code Review**: All PRs require review before merging into `main`.
 
-## Local Development
+## Developer Certificate of Origin (DCO)
+
+We enforce the Developer Certificate of Origin (DCO) on all pull requests. This requires that all commit messages contain the `Signed-off-by` line with an email address that matches the commit author. Please read the full text in [DCO.md](DCO.md).
+
+To sign off your commits, use the `-s` flag with git commit:
+```bash
+git commit -s -m "feat: your feature"
+```
+
+## Local Development (Node & Foundry)
 
 ```bash
 # Install dependencies

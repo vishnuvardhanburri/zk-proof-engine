@@ -17,7 +17,7 @@ export class NonceStore implements NonceStorePort {
 
   constructor(private readonly clockMs: () => number = Date.now) {}
 
-  consume(clientId: string, nonce: string, ttlMs: number, nowMs: number): boolean {
+  async consume(clientId: string, nonce: string, ttlMs: number, nowMs: number): Promise<boolean> {
     let entries = this.byClient.get(clientId);
     if (!entries) {
       entries = [];
@@ -33,6 +33,11 @@ export class NonceStore implements NonceStorePort {
 
     const seen = entries.some((e) => e.nonce === nonce);
     if (seen) return false;
+
+    // bounded per-client cap to prevent memory leaks from millions of nonces
+    if (entries.length >= MAX_ENTRIES) {
+      entries.shift(); // remove oldest
+    }
 
     entries.push({ nonce, expiresAtMs: nowMs + ttlMs });
     this.prune(nowMs);

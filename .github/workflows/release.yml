@@ -39,14 +39,16 @@ jobs:
       - name: Archive artifacts
         run: |
           tar -czf zk-proof-engine-release.tar.gz packages sbom.json
+          sha256sum zk-proof-engine-release.tar.gz sbom.json > sha256sums.txt
       
       - name: Generate SLSA Build Provenance
         id: attest
-        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
+        uses: actions/attest-build-provenance@f9eaf234fc1c2e333c1eca18177db0f44fa6ba52 # v2.2.1
         with:
           subject-path: |
             zk-proof-engine-release.tar.gz
             sbom.json
+            sha256sums.txt
 
       - name: Export provenance for Scorecard
         run: cp "${{ steps.attest.outputs.bundle-path }}" provenance.intoto.jsonl
@@ -56,16 +58,19 @@ jobs:
 
       - name: Sign artifacts
         run: |
-          cosign sign-blob --yes zk-proof-engine-release.tar.gz > release.sig
-          cosign sign-blob --yes sbom.json > sbom.sig
+          cosign sign-blob --yes --bundle release.sig zk-proof-engine-release.tar.gz
+          cosign sign-blob --yes --bundle sbom.sig sbom.json
+          cosign sign-blob --yes --bundle sha256sums.sig sha256sums.txt
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        uses: softprops/action-gh-release@fe965f7af51af5f2602596916f38a38df2e33de0 # v3.0.2
         with:
           files: |
             zk-proof-engine-release.tar.gz
             sbom.json
+            sha256sums.txt
             release.sig
             sbom.sig
+            sha256sums.sig
             provenance.intoto.jsonl
           generate_release_notes: true

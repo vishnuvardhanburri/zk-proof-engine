@@ -8,6 +8,9 @@ import { initTelemetry, ApiTracer, NoopTracer, traceContextFromHeaders } from '.
 import { EnvSecretStore } from './infrastructure/auth/EnvSecretStore.js';
 import { NonceStore } from './infrastructure/auth/NonceStore.js';
 import { InMemoryIdempotencyStore } from './infrastructure/auth/IdempotencyStore.js';
+import { RedisNonceStore } from './infrastructure/auth/RedisNonceStore.js';
+import { RedisIdempotencyStore } from './infrastructure/auth/RedisIdempotencyStore.js';
+import { Redis } from 'ioredis';
 import { AuditLog } from './infrastructure/observability/AuditLog.js';
 import { Metrics } from './infrastructure/observability/Metrics.js';
 import { EngineAdapter } from './infrastructure/engine/EngineAdapter.js';
@@ -16,6 +19,11 @@ import { buildServer } from './api/buildServer.js';
 
 export async function main(argv: string[], env: NodeJS.ProcessEnv): Promise<void> {
   const config = parseConfig(env);
+
+  let redisClient: Redis | null = null;
+  if (config.redisUrl) {
+    redisClient = new Redis(config.redisUrl);
+  }
 
   initTelemetry({
     serviceName: 'zkp-engine-api',
@@ -48,8 +56,8 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv): Promise<void
     registryRead: registry,
     registryWrite: registry?.hasWrite() ? registry.writer() : null,
     secrets,
-    nonces: new NonceStore(),
-    idempotencyStore: new InMemoryIdempotencyStore(),
+    nonces: redisClient ? new RedisNonceStore(redisClient) : new NonceStore(),
+    idempotencyStore: redisClient ? new RedisIdempotencyStore(redisClient) : new InMemoryIdempotencyStore(),
     audit,
     metrics,
     clock: { nowMs: () => Date.now() },

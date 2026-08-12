@@ -1,36 +1,53 @@
-
 # zk-proof-engine
 
-Zero-knowledge proof infrastructure for generating, verifying, registering, and
-continuously validating cryptographic proofs for software supply-chain workflows.
+Zero-knowledge proof infrastructure for software supply-chain verification — cryptographic proof generation, offline and on-chain verification, append-only registry, artifact integrity binding, authenticated REST API, and CI/CD enforcement.
 
-Built around **Groth16 / BN254**, canonical proof envelopes, artifact integrity
-verification, an on-chain registry, authenticated APIs, developer tooling, and
-security-focused CI/CD.
-
-> **Security notice**
->
-> This project has **not undergone a formal third-party security audit**.
-> Do not interpret the repository's automated security controls as an audit or
-> cryptographic certification. Review the [Security Model](#security-model),
-> [Threat Model](#threat-model), and [Status & Limitations](#status--limitations)
-> before using the system in production.
+> **Security notice:** This project has **not undergone a formal third-party security audit.**
+> Do not treat automated security controls as an audit or cryptographic certification.
+> Review the [Security Model](#security-model), [Threat Model](THREAT_MODEL.md), and [Status & Limitations](#status--limitations) before production use.
 
 <p align="center">
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14033/badge)](https://www.bestpractices.dev/en/projects/14033)
 [![CI](https://img.shields.io/github/actions/workflow/status/vishnuvardhanburri/zk-proof-engine/ci.yml?branch=main&label=CI)](https://github.com/vishnuvardhanburri/zk-proof-engine/actions/workflows/ci.yml)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/vishnuvardhanburri/zk-proof-engine/codeql.yml?branch=main&label=CodeQL)](https://github.com/vishnuvardhanburri/zk-proof-engine/actions/workflows/codeql.yml)
-[![Gitleaks](https://img.shields.io/github/actions/workflow/status/vishnuvardhanburri/zk-proof-engine/secret-scan.yml?branch=main&label=Gitleaks)](https://github.com/vishnuvardhanburri/zk-proof-engine/actions/workflows/secret-scan.yml)
 [![OpenSSF Scorecard](https://img.shields.io/github/actions/workflow/status/vishnuvardhanburri/zk-proof-engine/scorecard.yml?branch=main&label=Scorecard)](https://github.com/vishnuvardhanburri/zk-proof-engine/actions/workflows/scorecard.yml)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/vishnuvardhanburri/zk-proof-engine)](https://github.com/vishnuvardhanburri/zk-proof-engine/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </p>
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Security Model](#security-model)
+- [Supply-Chain Security](#supply-chain-security)
+- [Quick Start](#quick-start)
+- [Development](#development)
+- [Testing](#testing)
+- [CI/CD](#cicd)
+- [Cryptographic Design](#cryptographic-design)
+- [Threat Model](#threat-model)
+- [Release Integrity](#release-integrity)
+- [Proof Verification](#proof-verification)
+- [Proof Envelope](#proof-envelope)
+- [Configuration](#configuration)
+- [Status & Limitations](#status--limitations)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [Security Policy](#security-policy)
+- [Governance](#governance)
+- [OpenSSF Best Practices](#openssf-best-practices)
+- [License](#license)
+
+---
+
 ## Overview
 
-`zk-proof-engine` provides a complete proof lifecycle:
+`zk-proof-engine` provides a complete zero-knowledge proof lifecycle for software supply chains:
 
 ```text
 Circuit
@@ -55,223 +72,246 @@ Authenticated API
 On-Chain Registry
    │
    ▼
-Proof Gatekeeper
-````
+Proof Gatekeeper (CI/CD enforcement)
+```
 
-The project also treats the software supply chain as a security boundary:
+The system enforces the software supply chain as a security boundary:
 
 ```text
 Source
   │
-  ├── Locked dependencies
-  ├── CodeQL
-  ├── Secret scanning
-  ├── Dependency analysis
-  ├── Vulnerability scanning
-  └── CI validation
-          │
-          ▼
-     Release Artifact
-          │
-          ├── SBOM
-          ├── SLSA Provenance
-          ├── Sigstore Signature
-          └── SHA-256 Integrity
-          │
-          ▼
-      GitHub Release
+  ├── Locked dependencies (npm ci + package-lock.json)
+  ├── CodeQL static analysis
+  ├── Secret scanning (Gitleaks)
+  ├── Dependency vulnerability scanning (OSV)
+  ├── Dependency review on pull requests
+  └── Reproducible, signed releases (SLSA + Cosign)
 ```
+
+**Versioning:** This project follows [Semantic Versioning 2.0.0](https://semver.org/).  
+`MAJOR` — incompatible API or CLI changes.  
+`MINOR` — backwards-compatible new functionality.  
+`PATCH` — backwards-compatible bug and security fixes.
 
 ---
 
 ## Architecture
 
-The repository is organized as a monorepo with clearly separated
-cryptographic, application, contract, and CI boundaries.
+The system is organized as seven workspace packages, each with a distinct responsibility and trust boundary.
 
-| Component                   | Responsibility                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------- |
-| `packages/circuit-lib`      | Circuit definitions, generated artifacts, manifests, integrity verification      |
-| `packages/engine`           | Witness generation and Groth16 proving / verification                            |
-| `packages/proof-format`     | Canonical proof envelope serialization and hashing                               |
-| `packages/keys`             | HMAC and Ed25519 signing/key management                                          |
-| `packages/api`              | Authenticated REST API, verification, registration, rate limiting, audit logging |
-| `packages/cli`              | Developer CLI for proving, verifying, registering, and deployment workflows      |
-| `packages/dashboard`        | Monitoring and operational interface                                             |
-| `contracts/`                | On-chain registry and proof-gating contracts                                     |
-| `.github/actions/zk-verify` | CI proof-validation gate                                                         |
+| Package | Responsibility | Boundary |
+| --- | --- | --- |
+| `circuit-lib` | circom circuits, compiled R1CS/WASM, verification keys | Offline, no network |
+| `proof-format` | Canonical proof envelope types, serialization, `proofHash` | Library |
+| `engine` | Witness generation, Groth16 prove/verify, key management | Library, CPU-intensive |
+| `contracts` | Solidity verifier + append-only on-chain registry (Foundry) | EVM |
+| `api` | Fastify REST API — HMAC auth, nonce/idempotency, rate limits, audit log | HTTP |
+| `cli` | Developer CLI — `zk prove`, `verify`, `register`, `status`, `deploy` | TTY |
+| `dashboard` | React proof-status explorer | Web |
 
-### Design Principles
-
-* Cryptographic verification is performed independently from application logic.
-* Proofs are bound to explicit circuit and artifact identities.
-* Security-sensitive operations fail closed.
-* Release artifacts are independently verifiable.
-* CI security controls use least privilege.
-* Third-party GitHub Actions are pinned to immutable commits.
-* Security claims are documented according to actual evidence.
-
----
-
-## Proof Lifecycle
-
-```text
-zk new
-   │
-   ▼
-Circuit + Inputs
-   │
-   ▼
-Witness Generation
-   │
-   ▼
-Groth16 Proving
-   │
-   ▼
-Proof Envelope
-   │
-   ├── proofHash
-   ├── vkHash
-   ├── artifactHash
-   ├── circuitId
-   └── circuitVersion
-   │
-   ▼
-Offline Verification
-   │
-   ▼
-Authenticated Registration
-   │
-   ▼
-On-Chain Registry
-   │
-   ▼
-Gatekeeper Decision
-```
-
----
-
-## Supported Circuits
-
-| Circuit             | Version | Statement                                        |
-| ------------------- | ------: | ------------------------------------------------ |
-| `poseidon-preimage` | `1.0.0` | Proves knowledge of a Poseidon preimage          |
-| `merkle-inclusion`  | `1.0.0` | Proves knowledge of a leaf and valid Merkle path |
-
-Both circuits use Poseidon as the in-circuit hash function.
+Detailed architecture documentation: [ARCHITECTURE.md](ARCHITECTURE.md)  
+Design decisions: [docs/adr/](docs/adr/)
 
 ---
 
 ## Security Model
 
-A valid Groth16 proof establishes that the prover knows a witness `w`
-satisfying the circuit relation:
+Authentication uses **HMAC-SHA256** over a canonical request string including method, path, body hash, timestamp, and nonce. Requests outside a configurable timestamp window are rejected. Each nonce is consumed exactly once — backed by Redis in multi-replica deployments.
 
-```text
-C(x, w) = 1
-```
+Tenant identity is derived server-side from the authenticated API key. Client-supplied tenant identifiers in request payloads are explicitly ignored.
 
-A proof does **not** by itself establish:
-
-* prover identity;
-* proof freshness;
-* correctness of the circuit design;
-* correctness of the trusted setup;
-* semantic correctness of application-level public inputs.
-
-### Integrity Bindings
-
-| Binding           | Purpose                                              |
-| ----------------- | ---------------------------------------------------- |
-| `vkHash`          | Binds a proof to a canonical verification key        |
-| `proofHash`       | Detects modification of the proof envelope           |
-| `artifactHash`    | Binds the proof to the expected circuit artifact set |
-| `publicInputHash` | Provides deterministic on-chain proof identity       |
-| `manifestHash`    | Binds circuit metadata to a canonical manifest       |
-
-These bindings provide defense in depth rather than relying on a single
-integrity check.
-
----
-
-## Threat Model
-
-The system is designed to reject or fail closed against common integrity
-and supply-chain threats.
-
-| Threat                     | Primary Control                                       |
-| -------------------------- | ----------------------------------------------------- |
-| Forged proof               | Groth16 verification                                  |
-| Modified proof envelope    | `proofHash` validation                                |
-| Wrong verification key     | `vkHash` binding                                      |
-| Cross-circuit proof reuse  | Circuit identity binding                              |
-| Modified circuit artifacts | Artifact and manifest hashes                          |
-| Proof replay               | On-chain identity / deduplication                     |
-| Unauthorized API access    | Authentication and authorization                      |
-| Request replay             | Nonce / timestamp validation                          |
-| Excessive API traffic      | Rate limiting                                         |
-| Malicious dependency       | Lockfiles, OSV, Dependabot, Dependency Review         |
-| Workflow compromise        | Least-privilege permissions and immutable action pins |
-| Secret exposure            | Gitleaks and GitHub secret controls                   |
-| Release tampering          | SHA-256, SLSA provenance, Sigstore                    |
+Private inputs **never leave the proving agent**. The API receives only the public inputs and proof. The on-chain verifier is the source of truth for admitted proofs.
 
 ---
 
 ## Supply-Chain Security
 
-The repository continuously validates the software supply chain.
+| Control | Status |
+| --- | --- |
+| Gitleaks secret scanning | Configured — [`.gitleaks.toml`](.gitleaks.toml) |
+| CodeQL static analysis | Configured — [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml) |
+| OSV vulnerability scanning | Configured — [`osv-scanner.toml`](osv-scanner.toml) |
+| Dependabot | Configured — [`.github/dependabot.yml`](.github/dependabot.yml) |
+| Dependency review | Configured on pull requests |
+| OpenSSF Scorecard | Configured — [`.github/workflows/scorecard.yml`](.github/workflows/scorecard.yml) |
+| SHA-pinned Actions | All workflow actions pinned to full commit SHA |
+| Least-privilege permissions | Explicit `permissions:` block on every workflow |
+| SBOM (CycloneDX) | Generated at release |
+| SLSA Build Provenance | Generated via `actions/attest-build-provenance` at release |
+| Sigstore / Cosign | Release artifacts signed and verifiable |
+| `sha256sums.txt` | Checksums published alongside every release |
+| CODEOWNERS | Configured |
+| Workflow timeouts | Configured |
 
-| Control                              | Status                         |
-| ------------------------------------ | ------------------------------ |
-| Gitleaks                             | Configured                     |
-| CodeQL                               | Configured                     |
-| OSV Scanner                          | Configured                     |
-| Dependabot                           | Configured                     |
-| Dependency Review                    | Configured                     |
-| OpenSSF Scorecard                    | Configured                     |
-| Immutable GitHub Action pins         | Configured                     |
-| Least-privilege workflow permissions | Configured                     |
-| SBOM / CycloneDX                     | Configured                     |
-| SLSA provenance                      | Configured for tagged releases |
-| Sigstore / Cosign                    | Configured for tagged releases |
-| CODEOWNERS                           | Configured                     |
-| Workflow timeouts                    | Configured                     |
+Automated controls provide continuous assurance; they are **not a substitute for an independent security audit**.
 
-Automated controls provide continuous assurance; they are **not a substitute
-for an independent security audit**.
+---
+
+## Quick Start
+
+**Requirements:** Node.js 22+, npm 10+, Foundry (`forge`, `anvil`).
+
+```bash
+# 1. Clone and install
+git clone https://github.com/vishnuvardhanburri/zk-proof-engine.git
+cd zk-proof-engine
+npm ci
+npm run build
+
+# 2. Start a local Ethereum node (new terminal)
+npm run dev:anvil
+
+# 3. Deploy registry contract (new terminal)
+npm run dev:deploy
+
+# 4. Start the API server (new terminal)
+npm run dev:api
+
+# 5. Generate and verify a proof
+cd packages/cli
+npm run zk -- prove poseidon-preimage '{"preimage":"12345"}'
+npm run zk -- register ./proof.json --idempotency-key "$(uuidgen)"
+npm run zk -- status ./proof.json
+```
+
+---
+
+## Development
+
+```bash
+# Install all workspace dependencies
+npm ci
+
+# Build all packages
+npm run build
+
+# Lint all packages
+npm run lint
+
+# Type-check all packages
+npm run typecheck
+
+# Run full test suite
+npm test
+
+# Validate everything
+npm run check
+```
+
+### Smart Contracts
+
+```bash
+cd contracts
+forge test
+forge test --match-path "test/fuzz/*" --match-path "test/invariants/*"
+```
+
+### API (watch mode)
+
+```bash
+npm run dev -w packages/api
+```
+
+---
+
+## Testing
+
+Testing is layered across correctness, security, integration, and system boundaries.
+
+| Test Layer | Tool | Purpose |
+| --- | --- | --- |
+| Unit | Vitest | Package-level correctness |
+| Integration | Vitest | Cross-package and CLI behavior |
+| Property / Fuzz | Vitest + `forge` | Boundary and invariant discovery |
+| Smart-contract | Forge | Registry, verifier, gatekeeper |
+| Negative | Vitest | Invalid proofs and bypass attempts |
+| API security | Vitest | Authentication, replay, abuse |
+| E2E | CI | Prove → verify → register → on-chain gate |
+| Supply-chain | CI | Secrets, SAST, provenance |
+
+Passing automated tests does not constitute a formal security audit.
+
+---
+
+## CI/CD
+
+```text
+Pull Request / Push
+        │
+        ├── Build & Test (Node 22, Ubuntu + macOS + Windows)
+        ├── CodeQL
+        ├── Gitleaks
+        ├── OSV Scanner
+        ├── Dependency Review
+        ├── Smart Contract Tests (Foundry)
+        ├── Gatekeeper Validation
+        └── OpenSSF Scorecard
+
+Tagged Release
+        │
+        ├── Artifact (zk-proof-engine-release.tar.gz)
+        ├── SBOM (sbom.json — CycloneDX)
+        ├── SHA-256 checksums (sha256sums.txt)
+        ├── SLSA Build Provenance
+        └── Sigstore / Cosign signatures
+```
+
+All workflows use explicit permissions and per-job timeout controls.
+
+---
+
+## Cryptographic Design
+
+- **Proving scheme:** Groth16 over BN254 (EIP-196/197 standard EVM precompile curve)
+- **Security level:** ~100 bits (BN254 NFS trade-off; documented in [THREAT_MODEL.md](THREAT_MODEL.md))
+- **Circuits:** circom 2; `poseidon-preimage` and `merkle-inclusion` (production); `sha256-preimage` deferred
+- **Trusted setup:** Development PTau; production requires a proper multi-party ceremony (see [docs/21-trusted-setup-plan.md](docs/21-trusted-setup-plan.md))
+- **Verification keys:** Canonically hashed (`vkHash`); allow-listed server-side
+- **Proof envelope:** Deterministic canonical serialization; stable `proofHash` across environments
+
+Full cryptographic design rationale: [docs/12-crypto-design-review.md](docs/12-crypto-design-review.md) and [docs/adr/](docs/adr/)
+
+---
+
+## Threat Model
+
+See [THREAT_MODEL.md](THREAT_MODEL.md) for the full threat model, including:
+
+- Trust boundaries between prover, verifier API, and on-chain contracts
+- Replay attack mitigations (nonce + timestamp + HMAC)
+- Resource exhaustion mitigations (Semaphore, rate limits, Redis-backed nonce store)
+- Tenant isolation enforcement (server-side identity, no client-supplied tenant IDs)
+- Supply-chain attack surface and mitigations
 
 ---
 
 ## Release Integrity
 
-Tagged releases are accompanied by machine-verifiable supply-chain metadata.
-
-A release can be checked through:
+Every tagged release includes machine-verifiable supply-chain metadata.
 
 ```bash
 # Download release artifacts
-gh release download v0.1.0 \
+gh release download v1.0.0-rc.2 \
   -R vishnuvardhanburri/zk-proof-engine
 
 # Verify artifact digest
-sha256sum zk-proof-engine-release.tar.gz
+sha256sum --check sha256sums.txt
 
-# Verify GitHub build provenance
+# Verify GitHub SLSA build provenance
 gh attestation verify zk-proof-engine-release.tar.gz \
   -R vishnuvardhanburri/zk-proof-engine
 
-# Verify Sigstore signature
+# Verify Sigstore / Cosign signature
 cosign verify-blob \
   --certificate-identity-regexp \
   "^https://github\.com/vishnuvardhanburri/zk-proof-engine/\.github/workflows/release\.yml@refs/tags/v.*$" \
   --certificate-oidc-issuer \
   "https://token.actions.githubusercontent.com" \
-  --signature release.sig \
+  --bundle release.sig \
   zk-proof-engine-release.tar.gz
 ```
 
-The release identity is restricted to this repository's release workflow and
-version-tag execution context.
+The release identity is scoped to this repository's release workflow and version-tag execution context.
 
 ---
 
@@ -283,23 +323,21 @@ version-tag execution context.
 zk verify proof.json --offline
 ```
 
-Offline verification validates the envelope integrity, verification-key
-binding, and Groth16 proof.
+Validates envelope integrity, verification-key binding, and Groth16 proof without network access.
 
 ### On-Chain Registration
 
 ```bash
-zk register proof.json \
-  --idempotency-key "$(uuidgen)"
+zk register proof.json --idempotency-key "$(uuidgen)"
 ```
 
-### Query Status
+### Status Query
 
 ```bash
 zk status proof.json
 ```
 
-### API Verification
+### Authenticated API
 
 ```bash
 curl -X POST http://localhost:4000/v1/proofs/verify \
@@ -315,11 +353,9 @@ curl -X POST http://localhost:4000/v1/proofs/verify \
 
 ## Proof Envelope
 
-The project supports canonical proof envelopes.
-
 ### `zk-proof/v1`
 
-Unsigned proof envelope containing:
+Unsigned canonical proof envelope:
 
 ```text
 formatVersion
@@ -335,7 +371,7 @@ proverTimestamp
 
 ### `zk-proof/v2`
 
-Adds an Ed25519 signature over the canonical envelope representation.
+Adds Ed25519 signature over the canonical envelope:
 
 ```text
 signature
@@ -344,228 +380,131 @@ signature
 └── value
 ```
 
-Canonical serialization is deterministic so hashes and signatures are stable
-across verification environments.
-
----
-
-## Development
-
-### Requirements
-
-* Node.js 20+
-* npm 10+
-* Foundry (`forge`, `anvil`) for Solidity development
-
-### Install
-
-```bash
-git clone https://github.com/vishnuvardhanburri/zk-proof-engine.git
-cd zk-proof-engine
-
-npm ci
-npm run build
-```
-
-### Validate
-
-```bash
-npm run check
-npm test
-```
-
-### Smart Contracts
-
-```bash
-cd contracts
-
-forge test
-```
-
-Fuzz and invariant tests:
-
-```bash
-forge test \
-  --match-path "test/fuzz/*" \
-  --match-path "test/invariants/*"
-```
-
-### API Development
-
-```bash
-npm run dev -w packages/api
-```
-
----
-
-## Testing
-
-Testing is layered across correctness, security, integration, and system
-boundaries.
-
-| Test Layer           | Purpose                                   |
-| -------------------- | ----------------------------------------- |
-| Unit                 | Package-level correctness                 |
-| Integration          | Cross-package and CLI behavior            |
-| Property / Fuzz      | Boundary and invariant discovery          |
-| Smart-contract tests | Registry and gatekeeper behavior          |
-| Negative tests       | Invalid proofs and bypass attempts        |
-| API security tests   | Authentication, abuse, and validation     |
-| E2E                  | Prove → verify → register → on-chain gate |
-| Cross-platform CI    | Linux, macOS, Windows                     |
-| Supply-chain tests   | Dependencies, secrets, SAST, provenance   |
-| Release verification | Artifact, signature, SBOM, provenance     |
-
-Passing automated tests does not constitute a formal security audit.
+Canonical serialization is deterministic — hashes and signatures are stable across verification environments.
 
 ---
 
 ## Configuration
 
-Copy the example configuration:
-
 ```bash
 cp .env.example .env
 ```
 
-Typical development settings:
+| Variable | Description |
+| --- | --- |
+| `ZK_ENV` | Environment (`dev`, `staging`, `prod`) |
+| `ZK_API_URL` | API base URL |
+| `ZK_API_KEY` | HMAC signing key |
+| `ZK_NETWORK` | Chain network (`dev`, `sepolia`, `mainnet`) |
+| `ZK_RPC_URL` | EVM JSON-RPC endpoint |
+| `ZK_REGISTRY_ADDRESS` | Deployed registry contract address |
+| `ZK_REDIS_URL` | Redis URL (required for multi-replica deployments) |
+| `ZK_LOG_LEVEL` | Log level (`debug`, `info`, `warn`, `error`) |
 
-```text
-ZK_ENV=dev
-ZK_API_URL=http://localhost:4000
-ZK_API_KEY=<local-development-key>
-ZK_NETWORK=dev
-ZK_RPC_URL=http://127.0.0.1:8545
-ZK_REGISTRY_ADDRESS=<deployed-address>
-ZK_LOG_LEVEL=info
-```
-
-**Never commit real credentials, private keys, API keys, or `.env` files.**
-
----
-
-## CI / CD
-
-The repository validates changes through multiple independent workflows.
-
-```text
-Pull Request / Push
-        │
-        ├── Build / Test
-        ├── CodeQL
-        ├── Gitleaks
-        ├── OSV Scanner
-        ├── Dependency Review
-        ├── Smart Contract Tests
-        ├── Gatekeeper Validation
-        └── OpenSSF Scorecard
-```
-
-Tagged releases additionally produce:
-
-```text
-Release
- ├── Artifact
- ├── SHA-256 digest
- ├── SBOM
- ├── SLSA provenance
- └── Sigstore signature
-```
-
-All workflows use explicit permissions and timeout controls.
-
----
-
-## Security Reporting
-
-Please report vulnerabilities privately through GitHub's security reporting
-mechanism.
-
-See [SECURITY.md](SECURITY.md) for the complete disclosure process.
-
-When reporting a vulnerability, include where possible:
-
-* affected component;
-* affected version or commit;
-* reproduction steps;
-* security impact;
-* relevant logs or proof-of-concept;
-* suggested mitigation, if known.
-
-Do not publicly disclose an exploitable vulnerability before coordinated
-disclosure.
+**Never commit credentials, private keys, API keys, or `.env` files.**
 
 ---
 
 ## Status & Limitations
 
-This project is under active development and should be evaluated according to
-its documented evidence and limitations.
-
 ### Security Audit
 
-No formal third-party security audit has been performed.
+No formal third-party security audit has been performed. This is a stated prerequisite for a production deployment in adversarial environments.
 
 ### Trusted Setup
 
-Development builds use the project's development PTau configuration.
-A production deployment requires an appropriate trusted setup ceremony.
+Development builds use the project's development PTau. A production deployment requires a proper multi-party trusted setup ceremony per [docs/21-trusted-setup-plan.md](docs/21-trusted-setup-plan.md).
+
+### Multi-Replica Deployments
+
+Single-instance deployments use in-memory state for idempotency, nonces, and job queuing. Horizontal scaling requires `ZK_REDIS_URL` to be configured, which activates the Redis-backed adapters for authoritative distributed state.
 
 ### Maintainer Model
 
-The repository currently has a single maintainer:
+This project is currently maintained by a single maintainer. This is documented in [GOVERNANCE.md](GOVERNANCE.md). The bus factor and two-person review requirement are explicitly listed as unmet in [GOLD-GAP-REPORT.md](GOLD-GAP-REPORT.md).
 
-**Vishnu Vardhan Burri — [@vishnuvardhanburri](https://github.com/vishnuvardhanburri)**
+**Maintainer:** Vishnu Vardhan Burri — [@vishnuvardhanburri](https://github.com/vishnuvardhanburri)
 
-No additional maintainers or review teams are represented as existing where
-they do not exist.
+### Cryptographic Security Level
 
-### OpenSSF
-
-OpenSSF Scorecard is integrated into CI.
-
-OpenSSF Best Practices registration is a separate external assessment and
-should only be represented as complete after the repository has actually been
-registered and assessed.
-
-### Multi-Tenant Deployment
-
-The repository contains server-side tenant-related infrastructure, but a
-production deployment requiring strict tenant isolation should undergo
-additional isolation, authorization, concurrency, and data-leakage validation
-before being considered hardened for hostile multi-tenant workloads.
-
-### Binary Artifacts
-
-Some cryptographic circuit artifacts are required for the proof-generation
-workflow. Their integrity is validated through artifact and manifest hashes.
+BN254 provides approximately 100 bits of security. This is the standard EVM pairing precompile curve and is accepted as a production trade-off. See [THREAT_MODEL.md](THREAT_MODEL.md).
 
 ---
 
 ## Roadmap
 
-Planned work is intentionally separated from current capabilities.
+See [ROADMAP.md](ROADMAP.md) for the complete 12–18 month plan.
 
-* [ ] Independent third-party security audit
-* [ ] OpenSSF Best Practices registration
-* [ ] Production trusted setup ceremony
-* [ ] Continued dependency modernization
-* [ ] Additional circuit families
-* [ ] Production multi-tenant isolation hardening
-* [ ] Continued adversarial and failure-injection testing
+**Completed:**
+- Groth16 / BN254 proof engine (`circuit-lib`, `engine`)
+- Canonical proof envelopes (`proof-format`)
+- Authenticated Fastify REST API with HMAC auth, nonces, idempotency, rate limits (`api`)
+- On-chain registry and verifier contracts (Foundry)
+- Developer CLI (`cli`)
+- CI/CD gatekeeper workflow (`.github/`)
+- Redis-backed distributed state adapters (`api`)
+- SLSA Build Provenance, Sigstore signatures, SBOM (`release.yml`)
+- OpenSSF Best Practices Gold badge
+
+**In Progress:**
+- Production trusted setup ceremony
+
+**Planned (2026–2027):**
+- Mainnet contract deployment
+- Plonk / Halo2 universal setup integration
+- GPU-accelerated proving
+- Privacy-preserving proof delegation
 
 ---
 
-## Maintainer
+## Contributing
 
-**Vishnu Vardhan Burri**
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines, code style, and the DCO requirement.
 
-GitHub: [@vishnuvardhanburri](https://github.com/vishnuvardhanburri)
+All contributors must sign off commits with `git commit -s` in accordance with the [Developer Certificate of Origin](DCO.md).
+
+---
+
+## Security Policy
+
+Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/vishnuvardhanburri/zk-proof-engine/security/advisories/new).
+
+**Do not open public issues for security vulnerabilities.**
+
+See [SECURITY.md](SECURITY.md) for the full disclosure process and known accepted risks.
+
+---
+
+## Governance
+
+Roles, responsibilities, access continuity, and bus-factor documentation: [GOVERNANCE.md](GOVERNANCE.md)
+
+Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+
+---
+
+## OpenSSF Best Practices
+
+This project has achieved the **OpenSSF Best Practices Gold** badge, the highest tier of the [OpenSSF Best Practices program](https://www.bestpractices.dev/).
+
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14033/badge)](https://www.bestpractices.dev/en/projects/14033)
+
+**Project ID:** [14033](https://www.bestpractices.dev/en/projects/14033)  
+**Tiered score:** 300% (Gold)  
+**Last achieved:** 2026-08-12
+
+The Gold badge reflects verified compliance across governance, documentation, security, cryptographic design, testing, CI/CD, and supply-chain integrity criteria.
+
+For the full gap analysis against Gold criteria, including honestly documented unmet criteria such as bus factor and independent audit, see [GOLD-GAP-REPORT.md](GOLD-GAP-REPORT.md).
+
+<a href="https://www.bestpractices.dev/en/projects/14033">
+  <img src="docs/assets/openssf-gold.png" alt="OpenSSF Best Practices Gold badge — zk-proof-engine project ID 14033, awarded 2026-08-12" width="700">
+</a>
+
+*Screenshot of the official OpenSSF Best Practices project page showing Gold status for `zk-proof-engine` (Project ID 14033).*
 
 ---
 
 ## License
 
 MIT License. See [LICENSE](LICENSE).
-
-```
