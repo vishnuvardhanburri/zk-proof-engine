@@ -30,7 +30,7 @@
     "@fastify/swagger": "^9.8.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/core": "^1.29.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.56.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.221.0",
     "@opentelemetry/resources": "^1.29.0",
     "@opentelemetry/sdk-trace-base": "^1.29.0",
     "@opentelemetry/semantic-conventions": "^1.29.0",
@@ -38,7 +38,7 @@
     "@zkpe/engine": "0.2.0",
     "@zkpe/proof-format": "0.2.0",
     "ethers": "^6.17.0",
-    "fastify": "^5.11.3",
+    "fastify": "^5.12.0",
     "ioredis": "^5.11.1",
     "zod": "^4.4.3",
     "zod-to-json-schema": "^3.25.2"
