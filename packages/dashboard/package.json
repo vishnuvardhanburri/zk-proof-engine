@@ -23,10 +23,10 @@
   },
   "dependencies": {
     "@fastify/rate-limit": "^11.2.0",
-    "@fastify/static": "^10.1.2",
+    "@fastify/static": "^10.1.3",
     "@zkpe/api": "0.2.0",
     "@zkpe/circuit-lib": "0.2.0",
-    "fastify": "^5.11.3",
+    "fastify": "^5.12.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -39,6 +39,6 @@
     "jsdom": "^30.0.1",
     "typescript": "^5.6.3",
     "vite": "^6.0.7",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
